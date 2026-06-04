@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>週進度極致追蹤器</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22none%22 stroke=%22%2300f2fe%22 stroke-width=%2210%22 stroke-dasharray=%22210 70%22 stroke-linecap=%22round%22><animateTransform attributeName=%22transform%22 type=%22rotate%22 from=%220 50 50%22 to=%22360 50 50%22 dur=%2210s%22 repeatCount=%22indefinite%22/></circle><path d=%22M30 50 L45 65 L70 35%22 fill=%22none%22 stroke=%22%234facfe%22 stroke-width=%228%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>">
+    <link rel="stylesheet" href="style.css?t=202606010002">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body data-theme="neon">
+    <div class="scanlines"></div>
+
+    <div class="settings-btn" id="settingsBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+    </div>
+
+    <div class="menu" id="themeMenu">
+        <div class="menu-item" onclick="setTheme('neon')">✨ 霓虹之夜</div>
+        <div class="menu-item" onclick="setTheme('flow')">🌊 柔和流動</div>
+        <div class="menu-item" onclick="setTheme('terminal')">💻 駭客終端</div>
+        <div class="menu-item" onclick="setTheme('sunset')">🌇 日落地平線</div>
+        <div class="menu-item" onclick="setTheme('forest')">🌲 深邃森林</div>
+        <div class="menu-item" onclick="setTheme('midnight')">🍇 紫幻午夜</div>
+        <div class="menu-item" onclick="setTheme('minimal')">◻️ 極簡純白</div>
+        <div class="menu-item" onclick="setTheme('lava')">🔥 烈焰熔岩</div>
+        
+        <hr style="opacity: 0.1; margin: 5px 0;">
+        <div class="menu-section-title">進階設定</div>
+        <div class="menu-item" onclick="openTimeModal()">⚙️ 時間與作息設定</div>
+
+        <hr style="opacity: 0.1; margin: 5px 0;">
+        <div class="menu-section-title">通知設定</div>
+        <div class="menu-item-switch">
+            <span>下班提醒 (10m)</span>
+            <label class="switch"><input type="checkbox" id="notiEndDay" onchange="updateNotiConfig()"><span class="slider"></span></label>
+        </div>
+        <div class="menu-item-switch">
+            <span>進度達標 (90%)</span>
+            <label class="switch"><input type="checkbox" id="notiProgress" onchange="updateNotiConfig()"><span class="slider"></span></label>
+        </div>
+        <div class="menu-item-switch">
+            <span>整點喝水提醒</span>
+            <label class="switch"><input type="checkbox" id="notiHourly" onchange="updateNotiConfig()"><span class="slider"></span></label>
+        </div>
+        <div id="notiRequestBtn" class="menu-item" style="color: var(--primary-color); font-size: 0.7rem; text-align: center;" onclick="requestNotiPermission()">尚未取得權限 (點此開啟)</div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>⚙️ 時間與作息設定</h3>
+                <button class="close-btn" onclick="closeTimeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section-title">每日工作時段</div>
+                <div class="time-grid-modal">
+                    <div class="time-input-group">
+                        <label>上班時間</label>
+                        <input type="time" id="workStart">
+                    </div>
+                    <div class="time-input-group">
+                        <label>下班時間</label>
+                        <input type="time" id="workEnd">
+                    </div>
+                </div>
+
+                <div class="modal-section-title">午休時段</div>
+                <div class="time-grid-modal">
+                    <div class="time-input-group">
+                        <label>開始時間</label>
+                        <input type="time" id="lunchStart">
+                    </div>
+                    <div class="time-input-group">
+                        <label>結束時間</label>
+                        <input type="time" id="lunchEnd">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="save-btn" onclick="saveTimeConfig()">儲存設定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 id="title">WORK PROGRESS</h1>
+
+        <div id="quote" class="quote-text">載入中...</div>
+
+        <div class="percentage" id="percentText">0.00%</div>
+
+        <div class="progress-wrapper">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="info-label">剩餘時間 REMAINING</div>
+                <div class="info-value" id="timeLeft">--:--:--</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">當前狀態 STATUS</div>
+                <div class="info-value" id="currentDay">--</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Virtual Pet Section -->
+    <div class="pet-area">
+        <div id="petContainer" class="pet-container">
+            <div id="petStatus" class="pet-speech-bubble">正在發呆...</div>
+            <div id="pet" class="pet-dino"></div>
+            <div class="pet-actions">
+                <button id="feedBtn" title="餵食">🍲</button>
+                <button id="patBtn" title="拍拍">🖐️</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?t=202606031530"></script>
+</body>
+</html>
