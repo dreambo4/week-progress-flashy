@@ -283,7 +283,7 @@ function checkMilestones(percentage, now, todayWorkEnd) {
         const lastHourlyNoti = localStorage.getItem('last-noti-hourly');
         const hourlyKey = `${todayStr}-${currentHour}`;
         if (now.getMinutes() === 0 && lastHourlyNoti !== hourlyKey) {
-            new Notification("整點到囉！💧", { body: "起來ㄋ口水、去個廁所吧！🦖", icon: NOTI_ICON_WATER });
+            new Notification("整點到囉！💧", { body: "起來喝口水、去個廁所吧！🦖", icon: NOTI_ICON_WATER });
             localStorage.setItem('last-noti-hourly', hourlyKey);
         }
     }
