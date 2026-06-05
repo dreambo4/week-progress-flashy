@@ -4,7 +4,7 @@ const WORK_DAYS = 5;
 const TOTAL_WORK_HOURS_PER_DAY = WORK_END_HOUR - WORK_START_HOUR;
 const TOTAL_WORK_SECONDS_PER_WEEK = WORK_DAYS * TOTAL_WORK_HOURS_PER_DAY * 3600;
 
-console.log("Week Progress Script Loaded v1.3.0");
+console.log("Week Progress Script Loaded v1.4.1");
 
 const ENCOURAGEMENTS = [
     "加油！每一秒的努力都在成就更好的自己。🚀",
@@ -54,7 +54,6 @@ function updateQuote() {
     }
 }
 
-// --- Dynamic Time Configuration ---
 let timeConfig = JSON.parse(localStorage.getItem('week-progress-time-config')) || {
     workStart: "08:00",
     workEnd: "17:00",
@@ -63,7 +62,6 @@ let timeConfig = JSON.parse(localStorage.getItem('week-progress-time-config')) |
 };
 
 function openTimeModal() {
-    console.log("Opening Time Modal...");
     document.getElementById('workStart').value = timeConfig.workStart;
     document.getElementById('workEnd').value = timeConfig.workEnd;
     document.getElementById('lunchStart').value = timeConfig.lunchStart;
@@ -88,12 +86,6 @@ function saveTimeConfig() {
     if (typeof confetti === 'function') {
         confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
     }
-    // GA: Save settings
-    if (typeof gtag === 'function') {
-        gtag('event', 'save_settings', {
-            'work_hours': `${timeConfig.workStart}-${timeConfig.workEnd}`
-        });
-    }
 }
 
 function parseTimeToSec(timeStr) {
@@ -101,20 +93,19 @@ function parseTimeToSec(timeStr) {
     return h * 3600 + m * 60;
 }
 
-// --- Notification Logic ---
-// 使用 Base64 編碼以提高瀏覽器相容性
 const NOTI_ICON_DINO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAvCAAAAAC9e3dzAAAAAnRSTlMAAHaTzTgAAADaSURBVHic1ZQ7EoUwCEXRocn6bFkereujfRNjjIT4CWrxaMzA9c4ZQgD4KoZ2Whq5AHgkpSrHADA+xhDjm7xPnOe5znRh4HFpgkfO4x+K8UrAXuchjU3YpdpjFLqZBWjPJaB8+aVuiLbdIridaXtzVJVJcXuYafnf4rLK+bpBb88GXgmC2zkcrJRuDFYQi/i+9wj9i1Gat6d74V25UnlbX/+SYdZfG2gXa4m6hnm9z+triReR+GviZ1PHDT8jPiM34kieXqGs3uVU4j7zBDBEgNSRvDtiN/JJxw/71S1l4zrV3AAAAABJRU5ErkJggg==";
 const NOTI_ICON_CLOCK = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB4PSI1MCIgeT0iNzAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIj7ij7A8L3RleHQ+PC9zdmc+";
 const NOTI_ICON_WATER = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjgwIj7wn5KnPC90ZXh0Pjwvc3ZnPg==";
 
 let notiConfig = JSON.parse(localStorage.getItem('week-progress-noti-config')) || { endDay: true, progress: true, hourly: true };
+let weatherConfig = JSON.parse(localStorage.getItem('week-progress-weather-config')) || { bgEnabled: true, infoEnabled: true };
+let currentWeatherData = null;
 
 async function requestNotiPermission() {
     if (typeof Notification === 'undefined') {
         alert("此瀏覽器不支援通知功能 🚫");
         return;
     }
-    console.log("Requesting notification permission...");
     const permission = await Notification.requestPermission();
     updateNotiUI();
     if (permission === 'granted') {
@@ -125,21 +116,21 @@ async function requestNotiPermission() {
 function updateNotiUI() {
     const requestBtn = document.getElementById('notiRequestBtn');
     if (!requestBtn) return;
-    
     const endDayCheck = document.getElementById('notiEndDay');
     const progressCheck = document.getElementById('notiProgress');
     const hourlyCheck = document.getElementById('notiHourly');
-
+    const weatherBgCheck = document.getElementById('weatherBgEnabled');
+    const weatherInfoCheck = document.getElementById('weatherInfoEnabled');
     if (endDayCheck) endDayCheck.checked = notiConfig.endDay;
     if (progressCheck) progressCheck.checked = notiConfig.progress;
     if (hourlyCheck) hourlyCheck.checked = notiConfig.hourly;
-
+    if (weatherBgCheck) weatherBgCheck.checked = weatherConfig.bgEnabled;
+    if (weatherInfoCheck) weatherInfoCheck.checked = weatherConfig.infoEnabled;
     if (typeof Notification === 'undefined') {
         requestBtn.textContent = "此瀏覽器不支援通知";
         requestBtn.style.color = "gray";
         return;
     }
-
     requestBtn.style.display = (Notification.permission === 'granted') ? 'none' : 'block';
 }
 
@@ -148,45 +139,137 @@ function updateNotiConfig() {
     notiConfig.progress = document.getElementById('notiProgress').checked;
     notiConfig.hourly = document.getElementById('notiHourly').checked;
     localStorage.setItem('week-progress-noti-config', JSON.stringify(notiConfig));
-    // GA: Update Notification
-    if (typeof gtag === 'function') {
-        gtag('event', 'update_notifications', {
-            'endDay': notiConfig.endDay,
-            'progress': notiConfig.progress,
-            'hourly': notiConfig.hourly
-        });
+}
+
+function updateWeatherConfig() {
+    weatherConfig.bgEnabled = document.getElementById('weatherBgEnabled').checked;
+    weatherConfig.infoEnabled = document.getElementById('weatherInfoEnabled').checked;
+    localStorage.setItem('week-progress-weather-config', JSON.stringify(weatherConfig));
+    applyWeatherEffects();
+    if (weatherConfig.bgEnabled || weatherConfig.infoEnabled) fetchWeather();
+}
+
+async function fetchWeather() {
+    if (!weatherConfig.bgEnabled && !weatherConfig.infoEnabled) return;
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,relative_humidity_2m&daily=sunrise,sunset&timezone=auto`);
+            const data = await response.json();
+            currentWeatherData = data;
+            applyWeatherEffects();
+        } catch (error) {
+            console.error("Failed to fetch weather:", error);
+        }
+    }, (error) => {
+        console.log("Geolocation error:", error.message);
+        applyWeatherEffects();
+    });
+}
+
+function applyWeatherEffects() {
+    const bgContainer = document.getElementById('weatherBackground');
+    const infoBox = document.getElementById('weatherInfoBox');
+    const weatherEmoji = document.getElementById('weatherEmoji');
+    const weatherTemp = document.getElementById('weatherTemp');
+    const sunriseTime = document.getElementById('sunriseTime');
+    const sunsetTime = document.getElementById('sunsetTime');
+    const humidityVal = document.getElementById('humidityVal');
+    if (!bgContainer) return;
+    bgContainer.innerHTML = ''; 
+    if (!currentWeatherData) {
+        if (infoBox) infoBox.style.display = 'none';
+        return;
+    }
+    if (infoBox) {
+        infoBox.style.display = weatherConfig.infoEnabled ? 'flex' : 'none';
+        if (weatherConfig.infoEnabled) {
+            const temp = currentWeatherData.current.temperature_2m;
+            const code = currentWeatherData.current.weather_code;
+            const humidity = currentWeatherData.current.relative_humidity_2m;
+            const sunrise = currentWeatherData.daily.sunrise[0].split('T')[1];
+            const sunset = currentWeatherData.daily.sunset[0].split('T')[1];
+            if (weatherEmoji) weatherEmoji.textContent = getWeatherEmoji(code);
+            if (weatherTemp) weatherTemp.textContent = `${temp}°C`;
+            if (sunriseTime) sunriseTime.textContent = sunrise;
+            if (sunsetTime) sunsetTime.textContent = sunset;
+            if (humidityVal) humidityVal.textContent = `${humidity}%`;
+        }
+    }
+    if (weatherConfig.bgEnabled) {
+        createWeatherVisuals(currentWeatherData.current.weather_code);
     }
 }
 
-// --- Theme Management ---
+function getWeatherEmoji(code) {
+    if (code === 0) return '☀️';
+    if (code <= 3) return '☁️';
+    if (code >= 51 && code <= 67) return '🌧️';
+    if (code >= 80 && code <= 82) return '🌦️';
+    if (code >= 95) return '⛈️';
+    return '⛅';
+}
+
+function createWeatherVisuals(code) {
+    const bgContainer = document.getElementById('weatherBackground');
+    if (!bgContainer) return;
+    if (code === 0) {
+        const sun = document.createElement('div');
+        sun.className = 'sun-container';
+        bgContainer.appendChild(sun);
+    } else if (code <= 3) {
+        for (let i = 0; i < 3; i++) {
+            const cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            cloud.style.top = (15 + i * 20) + '%';
+            cloud.style.width = (150 + Math.random() * 150) + 'px';
+            cloud.style.height = '60px';
+            cloud.style.animationDuration = (40 + Math.random() * 40) + 's';
+            cloud.style.animationDelay = (i * -15) + 's';
+            bgContainer.appendChild(cloud);
+        }
+    } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+        const dropCount = code > 63 ? 80 : 40;
+        for (let i = 0; i < dropCount; i++) {
+            const drop = document.createElement('div');
+            drop.className = 'rain-drop';
+            drop.style.left = Math.random() * 100 + 'vw';
+            drop.style.animationDuration = (0.6 + Math.random() * 0.4) + 's';
+            drop.style.animationDelay = Math.random() * 2 + 's';
+            bgContainer.appendChild(drop);
+        }
+    } else if (code >= 95) {
+        for (let i = 0; i < 100; i++) {
+            const drop = document.createElement('div');
+            drop.className = 'rain-drop';
+            drop.style.left = Math.random() * 100 + 'vw';
+            drop.style.animationDuration = '0.5s';
+            bgContainer.appendChild(drop);
+        }
+    }
+}
+
 function setTheme(theme) {
     document.body.setAttribute('data-theme', theme);
     localStorage.setItem('week-progress-theme', theme);
     const menu = document.getElementById('themeMenu');
     if (menu) menu.classList.remove('active');
-    // GA: Change theme
-    if (typeof gtag === 'function') {
-        gtag('event', 'select_theme', { 'theme_id': theme });
-    }
 }
 
-// --- Pet & Celebration Logic ---
 let lastCelebrationDay = -1;
 function triggerCelebration() {
     const duration = 60 * 1000;
     const animationEnd = Date.now() + duration;
     const interval = setInterval(function() {
-        const timeLeft = animationEnd - Date.now();
-        if (timeLeft <= 0) return clearInterval(interval);
+        if (Date.now() > animationEnd) return clearInterval(interval);
         if (typeof confetti === 'function') {
             confetti({ particleCount: 25, origin: { x: Math.random(), y: Math.random() - 0.2 } });
         }
     }, 250);
 }
 
-let petHunger = 100;
-let petPos = 50;
-let isAnnouncing = false;
+let petHunger = 100, petPos = 50, isAnnouncing = false;
 
 function feedPet() {
     petHunger = Math.min(100, petHunger + 30);
@@ -197,35 +280,23 @@ function feedPet() {
         setTimeout(() => { isAnnouncing = false; updatePetStatus(); }, 1500);
         if (typeof confetti === 'function') { confetti({ particleCount: 20, spread: 30, origin: { y: 0.9 } }); }
     }
-    // GA: Feed Pet
-    if (typeof gtag === 'function') {
-        gtag('event', 'pet_action', { 'method': 'feed' });
-    }
 }
 
 function patPet() {
-    const pet = document.getElementById('pet');
-    const petStatus = document.getElementById('petStatus');
+    const pet = document.getElementById('pet'), petStatus = document.getElementById('petStatus');
     if (pet && petStatus) {
         const currentTransform = pet.style.transform || "";
         pet.style.transform = `${currentTransform} scale(1.3)`;
-        setTimeout(() => {
-            if (currentTransform.includes("scaleX(-1)")) pet.style.transform = "scaleX(-1)"; else pet.style.transform = "scaleX(1)";
-        }, 300);
+        setTimeout(() => { pet.style.transform = currentTransform; }, 300);
         petStatus.textContent = "❤️";
         isAnnouncing = true;
         setTimeout(() => { isAnnouncing = false; updatePetStatus(); }, 2000);
-    }
-    // GA: Pat Pet
-    if (typeof gtag === 'function') {
-        gtag('event', 'pet_action', { 'method': 'pat' });
     }
 }
 
 function updatePetStatus() {
     if (isAnnouncing) return;
-    const petStatus = document.getElementById('petStatus');
-    const pet = document.getElementById('pet');
+    const petStatus = document.getElementById('petStatus'), pet = document.getElementById('pet');
     if (!petStatus || !pet) return;
     pet.classList.remove('hungry', 'happy', 'dead');
     if (petHunger > 80) { petStatus.textContent = "小恐龍跑得很開心！🦖✨"; pet.classList.add('happy'); }
@@ -237,20 +308,15 @@ function updatePetStatus() {
 function announceTime() {
     const petStatus = document.getElementById('petStatus');
     if (!petStatus) return;
-    const now = new Date();
-    const day = now.getDay();
-    const currentDaySeconds = (now.getHours() * 3600) + (now.getMinutes() * 60);
-    const workStartSec = parseTimeToSec(timeConfig.workStart);
-    const workEndSec = parseTimeToSec(timeConfig.workEnd);
+    const now = new Date(), day = now.getDay(), curSec = (now.getHours() * 3600) + (now.getMinutes() * 60);
+    const wStart = parseTimeToSec(timeConfig.workStart), wEnd = parseTimeToSec(timeConfig.workEnd);
     let msg = "";
     if (day === 0 || day === 6) msg = "週末萬歲！盡情狂歡吧 🎉";
+    else if (curSec < wStart) msg = "還沒開工，再摸一下魚... ☕️";
+    else if (curSec >= wEnd) msg = "下班啦！快點回家休息 🍻";
     else {
-        if (currentDaySeconds < workStartSec) msg = "還沒開工，再摸一下魚... ☕️";
-        else if (currentDaySeconds >= workEndSec) msg = "下班啦！快點回家休息 🍻";
-        else {
-            const remMinTotal = Math.floor((workEndSec - currentDaySeconds) / 60);
-            msg = `加油！距離下班還有 ${Math.floor(remMinTotal / 60)} 小時 ${remMinTotal % 60} 分鐘 🏠`;
-        }
+        const rem = Math.floor((wEnd - curSec) / 60);
+        msg = `加油！距離下班還有 ${Math.floor(rem / 60)} 小時 ${rem % 60} 分鐘 🏠`;
     }
     isAnnouncing = true;
     petStatus.textContent = msg;
@@ -259,17 +325,11 @@ function announceTime() {
 
 function checkMilestones(percentage, now, todayWorkEnd) {
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
-    const todayStr = now.toISOString().split('T')[0];
-    const currentHour = now.getHours();
-    const workStartSec = parseTimeToSec(timeConfig.workStart);
-    const workEndSec = parseTimeToSec(timeConfig.workEnd);
-
-    if (notiConfig.endDay) {
-        const timeToWorkEnd = todayWorkEnd - now;
-        if (timeToWorkEnd > 0 && timeToWorkEnd <= 10 * 60 * 1000 && localStorage.getItem('last-noti-10m') !== todayStr) {
-            new Notification("準備下班！🍻", { body: "距離下班只剩 10 分鐘，準備收工！", icon: NOTI_ICON_CLOCK });
-            localStorage.setItem('last-noti-10m', todayStr);
-        }
+    const todayStr = now.toISOString().split('T')[0], curHour = now.getHours();
+    const wStart = parseTimeToSec(timeConfig.workStart), wEnd = parseTimeToSec(timeConfig.workEnd);
+    if (notiConfig.endDay && (todayWorkEnd - now <= 10 * 60 * 1000) && (todayWorkEnd - now > 0) && localStorage.getItem('last-noti-10m') !== todayStr) {
+        new Notification("準備下班！🍻", { body: "距離下班只剩 10 分鐘，準備收工！", icon: NOTI_ICON_CLOCK });
+        localStorage.setItem('last-noti-10m', todayStr);
     }
     if (notiConfig.progress && percentage >= 50 && percentage < 90 && localStorage.getItem('last-noti-50p') !== todayStr) {
         new Notification("本週已過一半！🌓", { body: "加油！再撐一下就週末了！🦖", icon: NOTI_ICON_DINO });
@@ -279,104 +339,72 @@ function checkMilestones(percentage, now, todayWorkEnd) {
         new Notification("本週進度 90%！🏁", { body: "做得好！勝利就在眼前！", icon: NOTI_ICON_DINO });
         localStorage.setItem('last-noti-90p', todayStr);
     }
-    if (notiConfig.hourly && (now.getHours() * 3600 >= workStartSec) && (now.getHours() * 3600 < workEndSec)) {
-        const lastHourlyNoti = localStorage.getItem('last-noti-hourly');
-        const hourlyKey = `${todayStr}-${currentHour}`;
-        if (now.getMinutes() === 0 && lastHourlyNoti !== hourlyKey) {
-            new Notification("整點到囉！💧", { body: "起來喝口水、去個廁所吧！🦖", icon: NOTI_ICON_WATER });
-            localStorage.setItem('last-noti-hourly', hourlyKey);
-        }
+    if (notiConfig.hourly && (now.getHours() * 3600 >= wStart) && (now.getHours() * 3600 < wEnd) && now.getMinutes() === 0 && localStorage.getItem('last-noti-hourly') !== `${todayStr}-${curHour}`) {
+        new Notification("整點到囉！💧", { body: "起來喝口水、去個廁所吧！🦖", icon: NOTI_ICON_WATER });
+        localStorage.setItem('last-noti-hourly', `${todayStr}-${curHour}`);
     }
 }
 
 function updateProgress() {
-    const now = new Date();
-    const currentDay = now.getDay();
-    const workStartSec = parseTimeToSec(timeConfig.workStart);
-    const workEndSec = parseTimeToSec(timeConfig.workEnd);
-    const lunchStartSec = parseTimeToSec(timeConfig.lunchStart);
-    const lunchEndSec = parseTimeToSec(timeConfig.lunchEnd);
-
+    const now = new Date(), curDay = now.getDay();
+    const wStart = parseTimeToSec(timeConfig.workStart), wEnd = parseTimeToSec(timeConfig.workEnd);
+    const lStart = parseTimeToSec(timeConfig.lunchStart), lEnd = parseTimeToSec(timeConfig.lunchEnd);
     const monday = new Date(now);
-    const diffToMon = (currentDay === 0 ? -6 : 1 - currentDay);
-    monday.setDate(now.getDate() + diffToMon);
+    monday.setDate(now.getDate() + (curDay === 0 ? -6 : 1 - curDay));
     monday.setHours(0, 0, 0, 0);
-
-    const weekStart = new Date(monday);
-    weekStart.setSeconds(workStartSec);
-    const weekEnd = new Date(monday);
-    weekEnd.setDate(monday.getDate() + 4);
-    weekEnd.setSeconds(workEndSec);
-
-    const todayWorkEnd = new Date(now);
-    todayWorkEnd.setHours(0, 0, 0, 0);
-    todayWorkEnd.setSeconds(workEndSec);
-
+    const weekStart = new Date(monday); weekStart.setSeconds(wStart);
+    const weekEnd = new Date(monday); weekEnd.setDate(monday.getDate() + 4); weekEnd.setSeconds(wEnd);
+    const todayWorkEnd = new Date(now); todayWorkEnd.setHours(0, 0, 0, 0); todayWorkEnd.setSeconds(wEnd);
     const totalDuration = weekEnd - weekStart;
     let elapsed = now - weekStart;
-    let statusText = "努力奮鬥中 🚀";
-    let isOffDuty = false, isCelebrationWindow = false;
-    const currentDaySeconds = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
-
-    if (currentDay === 0 || currentDay === 6) { statusText = (currentDay === 6 ? "週末狂歡中 🎉" : "週日充電中 ⚡️"); isOffDuty = true; }
-    else {
-        if (currentDaySeconds < workStartSec) statusText = "尚未開工 ☕️";
-        else if (currentDaySeconds >= workEndSec) { isOffDuty = true; if (currentDaySeconds < workEndSec + 60) { statusText = "今日已收工 🍻"; isCelebrationWindow = true; } else statusText = "下班休息中 🔋"; }
-        else if (currentDaySeconds >= lunchStartSec && currentDaySeconds < lunchEndSec) statusText = "午休充電中 🍱";
-    }
+    let statusText = "努力奮鬥中 🚀", isOff = false, isCeleb = false;
+    const curSec = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
+    if (curDay === 0 || curDay === 6) { statusText = (curDay === 6 ? "週末狂歡中 🎉" : "週日充電中 ⚡️"); isOff = true; }
+    else if (curSec < wStart) statusText = "尚未開工 ☕️";
+    else if (curSec >= wEnd) { isOff = true; if (curSec < wEnd + 60) { statusText = "今日已收工 🍻"; isCeleb = true; } else statusText = "下班休息中 🔋"; }
+    else if (curSec >= lStart && curSec < lEnd) statusText = "午休充電中 🍱";
     if (now < weekStart) elapsed = 0; else if (now > weekEnd) elapsed = totalDuration;
-    const clampedPercentage = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-    checkMilestones(clampedPercentage, now, todayWorkEnd);
-    if (isCelebrationWindow) { document.body.classList.add('celebration-mode'); if (lastCelebrationDay !== currentDay) { triggerCelebration(); lastCelebrationDay = currentDay; } }
-    else { document.body.classList.remove('celebration-mode'); if (!isOffDuty) lastCelebrationDay = -1; }
-    const title = document.getElementById('title'), progressBar = document.getElementById('progressBar'), percentText = document.getElementById('percentText'), timeLeft = document.getElementById('timeLeft'), dayLabel = document.getElementById('currentDay');
+    const perc = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+    checkMilestones(perc, now, todayWorkEnd);
+    if (isCeleb) { document.body.classList.add('celebration-mode'); if (lastCelebrationDay !== curDay) { triggerCelebration(); lastCelebrationDay = curDay; } }
+    else { document.body.classList.remove('celebration-mode'); if (!isOff) lastCelebrationDay = -1; }
+    const title = document.getElementById('title'), pBar = document.getElementById('progressBar'), pText = document.getElementById('percentText'), tLeft = document.getElementById('timeLeft'), dLabel = document.getElementById('currentDay');
     if (title) title.textContent = statusText;
-    if (progressBar) progressBar.style.width = clampedPercentage + '%';
-    if (percentText) percentText.textContent = clampedPercentage.toFixed(4) + '%';
-    const totalSeconds = Math.floor(Math.max(0, weekEnd - now) / 1000);
-    if (timeLeft) timeLeft.textContent = `${Math.floor(totalSeconds / 3600)}h ${Math.floor((totalSeconds % 3600) / 60)}m ${totalSeconds % 60}s`;
+    if (pBar) pBar.style.width = perc + '%';
+    if (pText) pText.textContent = perc.toFixed(4) + '%';
+    const tSec = Math.floor(Math.max(0, weekEnd - now) / 1000);
+    if (tLeft) tLeft.textContent = `${Math.floor(tSec / 3600)}h ${Math.floor((tSec % 3600) / 60)}m ${tSec % 60}s`;
     const dayNames = ['週日 SUNDAY', '週一 MONDAY', '週二 TUESDAY', '週三 WEDNESDAY', '週四 THURSDAY', '週五 FRIDAY', '週六 SATURDAY'];
-    if (dayLabel) dayLabel.textContent = dayNames[currentDay];
+    if (dLabel) dLabel.textContent = dayNames[curDay];
     updateQuote();
 }
 
 function initPet() {
-    const container = document.getElementById('petContainer'), pet = document.getElementById('pet'), feedBtn = document.getElementById('feedBtn'), patBtn = document.getElementById('patBtn');
+    const container = document.getElementById('petContainer'), pet = document.getElementById('pet'), fBtn = document.getElementById('feedBtn'), pBtn = document.getElementById('patBtn');
     if (!container || !pet) return;
     container.style.left = petPos + '%';
-    const handleFeed = (e) => { e.preventDefault(); e.stopPropagation(); feedPet(); };
-    const handlePat = (e) => { e.preventDefault(); e.stopPropagation(); patPet(); };
-    if (feedBtn) { feedBtn.addEventListener('click', handleFeed); feedBtn.addEventListener('touchstart', handleFeed); }
-    if (patBtn) { patBtn.addEventListener('click', handlePat); patBtn.addEventListener('touchstart', handlePat); }
+    fBtn.onclick = (e) => feedPet();
+    pBtn.onclick = (e) => patPet();
     setInterval(() => {
         if (Math.random() > 0.85 && !isAnnouncing && petHunger > 0) announceTime();
-        if (petHunger <= 0) { pet.classList.remove('walking'); return; }
-        if (Math.random() > 0.4) { 
-            let moveAmount = (Math.random() * 40 - 20); let newPos = Math.max(15, Math.min(85, petPos + moveAmount));
+        if (petHunger > 0 && Math.random() > 0.4) { 
+            let newPos = Math.max(15, Math.min(85, petPos + (Math.random() * 40 - 20)));
             if (newPos !== petPos) { pet.style.transform = (newPos > petPos ? "scaleX(-1)" : "scaleX(1)"); petPos = newPos; container.style.left = petPos + '%'; pet.classList.add('walking'); setTimeout(() => pet.classList.remove('walking'), 2500); }
         }
         petHunger = Math.max(0, petHunger - 0.5); updatePetStatus();
     }, 5000);
 }
 
-// --- Initialization ---
 const savedTheme = localStorage.getItem('week-progress-theme') || 'neon';
 setTheme(savedTheme);
-
-document.getElementById('settingsBtn').onclick = (e) => {
-    e.stopPropagation();
-    document.getElementById('themeMenu').classList.toggle('active');
+document.getElementById('settingsBtn').onclick = (e) => { e.stopPropagation(); document.getElementById('themeMenu').classList.toggle('active'); };
+window.onclick = (e) => { 
+    if (document.getElementById('themeMenu')) document.getElementById('themeMenu').classList.remove('active'); 
+    if (e.target === document.getElementById('settingsModal')) closeTimeModal(); 
 };
-
-// Handle window clicks to close menu/modal
-window.onclick = (e) => {
-    const menu = document.getElementById('themeMenu');
-    const modal = document.getElementById('settingsModal');
-    if (menu) menu.classList.remove('active');
-    if (e.target === modal) closeTimeModal(); // Click outside to close
-};
-
 initPet();
 updateProgress();
 updateNotiUI();
+fetchWeather();
 setInterval(updateProgress, 1000);
+setInterval(fetchWeather, 30 * 60 * 1000);

@@ -133,6 +133,55 @@ body {
     padding: 20px;
 }
 
+/* Weather Background Effects */
+.weather-bg-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* Sunny Effect */
+.sun-container {
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(255,255,0,0.4) 0%, rgba(255,165,0,0.1) 50%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(20px);
+    animation: sun-pulse 8s infinite alternate ease-in-out;
+}
+@keyframes sun-pulse {
+    from { transform: scale(1); opacity: 0.6; }
+    to { transform: scale(1.2); opacity: 0.9; }
+}
+
+/* Rain Effect */
+.rain-drop {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.3);
+    width: 2px; height: 15px;
+    top: -20px;
+    animation: rain-fall linear infinite;
+}
+@keyframes rain-fall {
+    to { transform: translateY(100vh); }
+}
+
+/* Cloud Effect */
+.cloud {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    filter: blur(15px);
+    animation: cloud-move linear infinite;
+}
+@keyframes cloud-move {
+    from { left: -200px; }
+    to { left: 100vw; }
+}
+
 .scanlines {
     pointer-events: none !important;
     position: fixed;
@@ -270,98 +319,6 @@ h1 {
 .save-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
 .save-btn:active { transform: scale(0.95); }
 
-/* Modal Styles */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 2000000;
-    display: none;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-overlay.active { display: flex; }
-
-.modal-box {
-    background: var(--card-bg);
-    border: var(--card-border);
-    border-radius: 24px;
-    width: 90%;
-    max-width: 400px;
-    padding: 2rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    animation: modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes modal-pop {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.modal-header h3 { font-size: 1.1rem; color: var(--primary-color); margin: 0; }
-
-.close-btn {
-    background: none; border: none; color: var(--text-color);
-    font-size: 1.5rem; cursor: pointer; opacity: 0.5;
-}
-.close-btn:hover { opacity: 1; }
-
-.modal-section-title {
-    font-size: 0.75rem; opacity: 0.6; margin: 1.2rem 0 0.6rem;
-    text-transform: uppercase; letter-spacing: 1px;
-}
-
-.time-grid-modal {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-
-.time-input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.time-input-group label { font-size: 0.7rem; font-weight: bold; opacity: 0.8; }
-
-.time-input-group input[type="time"] {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    color: var(--text-color);
-    padding: 10px;
-    font-size: 1rem;
-    outline: none;
-    width: 100%;
-}
-
-.modal-footer { margin-top: 2rem; }
-
-.save-btn {
-    width: 100%;
-    background: var(--primary-color);
-    color: #000;
-    border: none;
-    border-radius: 12px;
-    padding: 14px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: transform 0.2s, filter 0.2s;
-}
-.save-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-.save-btn:active { transform: translateY(0); }
-
 /* Side Menu Styles */
 .settings-btn {
     position: fixed;
@@ -386,6 +343,7 @@ h1 {
     top: 75px; right: 20px;
     background: var(--card-bg);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: var(--card-border);
     border-radius: 16px;
     padding: 10px;
@@ -394,6 +352,23 @@ h1 {
     gap: 5px;
     z-index: 1000;
     width: 240px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) transparent;
+}
+
+.menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.menu::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
 }
 
 .menu.active { display: flex; }
@@ -523,6 +498,65 @@ input:checked + .slider:before { transform: translateX(14px); }
 }
 .info-value { font-size: clamp(0.9rem, 4vw, 1.2rem); font-weight: 700; }
 
+/* Weather Dashboard */
+.weather-dashboard {
+    margin-top: 1.5rem;
+    padding: 1.2rem 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    border: var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    animation: fade-in 0.5s ease-out;
+}
+
+@keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.weather-main {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.weather-emoji {
+    font-size: clamp(2rem, 8vw, 2.8rem);
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+}
+
+.weather-temp {
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.weather-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: right;
+}
+
+.weather-detail-item {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+}
+
+.detail-label {
+    opacity: 0.5;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
 /* Celebration Mode */
 body.celebration-mode { animation: bg-rainbow 10s infinite linear; }
 @keyframes bg-rainbow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
@@ -532,4 +566,12 @@ body.celebration-mode { animation: bg-rainbow 10s infinite linear; }
     .container { padding: 1.5rem; }
     .info-grid { grid-template-columns: 1fr; }
     .settings-btn { top: 15px; right: 15px; }
+    .weather-dashboard {
+        flex-direction: row;
+        padding: 1rem;
+        gap: 10px;
+    }
+    .weather-details {
+        gap: 4px;
+    }
 }

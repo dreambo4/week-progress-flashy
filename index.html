@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>週進度極致追蹤器</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22none%22 stroke=%22%2300f2fe%22 stroke-width=%2210%22 stroke-dasharray=%22210 70%22 stroke-linecap=%22round%22><animateTransform attributeName=%22transform%22 type=%22rotate%22 from=%220 50 50%22 to=%22360 50 50%22 dur=%2210s%22 repeatCount=%22indefinite%22/></circle><path d=%22M30 50 L45 65 L70 35%22 fill=%22none%22 stroke=%22%234facfe%22 stroke-width=%228%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>">
-    <link rel="stylesheet" href="style.css?t=202606010002">
+    <link rel="stylesheet" href="style.css?t=202606040002">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body data-theme="neon">
     <div class="scanlines"></div>
+    
+    <div id="weatherBackground" class="weather-bg-container"></div>
 
     <div class="settings-btn" id="settingsBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -46,6 +48,18 @@
             <span>整點喝水提醒</span>
             <label class="switch"><input type="checkbox" id="notiHourly" onchange="updateNotiConfig()"><span class="slider"></span></label>
         </div>
+
+        <hr style="opacity: 0.1; margin: 5px 0;">
+        <div class="menu-section-title">天氣設定</div>
+        <div class="menu-item-switch">
+            <span>動態天氣背景</span>
+            <label class="switch"><input type="checkbox" id="weatherBgEnabled" onchange="updateWeatherConfig()"><span class="slider"></span></label>
+        </div>
+        <div class="menu-item-switch">
+            <span>顯示天氣資訊</span>
+            <label class="switch"><input type="checkbox" id="weatherInfoEnabled" onchange="updateWeatherConfig()"><span class="slider"></span></label>
+        </div>
+
         <div id="notiRequestBtn" class="menu-item" style="color: var(--primary-color); font-size: 0.7rem; text-align: center;" onclick="requestNotiPermission()">尚未取得權限 (點此開啟)</div>
         
         <hr style="opacity: 0.1; margin: 5px 0;">
@@ -114,6 +128,27 @@
                 <div class="info-value" id="currentDay">--</div>
             </div>
         </div>
+
+        <div class="weather-dashboard" id="weatherInfoBox" style="display: none;">
+            <div class="weather-main">
+                <div id="weatherEmoji" class="weather-emoji">☀️</div>
+                <div id="weatherTemp" class="weather-temp">--°C</div>
+            </div>
+            <div class="weather-details">
+                <div class="weather-detail-item">
+                    <span class="detail-label">日出 SUNRISE</span>
+                    <span id="sunriseTime" class="detail-value">--:--</span>
+                </div>
+                <div class="weather-detail-item">
+                    <span class="detail-label">日落 SUNSET</span>
+                    <span id="sunsetTime" class="detail-value">--:--</span>
+                </div>
+                <div class="weather-detail-item">
+                    <span class="detail-label">濕度 HUMIDITY</span>
+                    <span id="humidityVal" class="detail-value">--%</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Virtual Pet Section -->
@@ -128,6 +163,6 @@
         </div>
     </div>
 
-    <script src="script.js?t=202606031530"></script>
+    <script src="script.js?t=202606040002"></script>
 </body>
 </html>
