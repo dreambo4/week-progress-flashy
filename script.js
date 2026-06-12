@@ -98,9 +98,27 @@ const NOTI_ICON_DINO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAvCA
 const NOTI_ICON_CLOCK = "icons/clock.png";
 const NOTI_ICON_WATER = "icons/water.png";
 
-let notiConfig = JSON.parse(localStorage.getItem('week-progress-noti-config')) || { endDay: true, progress: true, hourly: true };
+let notiConfig = JSON.parse(localStorage.getItem('week-progress-noti-config')) || { endDay: true, progress: true, hourly: true, weatherAlert: true };
+if (notiConfig.weatherAlert === undefined) notiConfig.weatherAlert = true;
 let weatherConfig = JSON.parse(localStorage.getItem('week-progress-weather-config')) || { bgEnabled: true, infoEnabled: true };
 let currentWeatherData = null;
+let previousWeatherCode = JSON.parse(localStorage.getItem('week-progress-prev-weather-code'));
+
+function isRainyCode(code) {
+    return (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
+}
+
+function getWeatherChangeMessage(oldCode, newCode) {
+    const wasRainy = oldCode !== null && isRainyCode(oldCode);
+    const isRainy = isRainyCode(newCode);
+    if (!wasRainy && isRainy) return { title: '下雨了！☔', body: '外面開始下雨了，記得帶傘！🌧️' };
+    if (wasRainy && !isRainy) return { title: '雨停了！🌤️', body: '雨已經停囉，出去透透氣吧！☀️' };
+    if (wasRainy && isRainy && oldCode !== newCode) {
+        if (newCode >= 95 && oldCode < 95) return { title: '暴雨來了！⛈️', body: '注意安全，避免外出！' };
+        if (oldCode >= 95 && newCode < 95) return { title: '暴雨已過 🌧️', body: '還在下雨，但暴雨已減弱。' };
+    }
+    return null;
+}
 
 async function requestNotiPermission() {
     if (typeof Notification === 'undefined') {
@@ -120,11 +138,13 @@ function updateNotiUI() {
     const endDayCheck = document.getElementById('notiEndDay');
     const progressCheck = document.getElementById('notiProgress');
     const hourlyCheck = document.getElementById('notiHourly');
+    const weatherAlertCheck = document.getElementById('notiWeatherAlert');
     const weatherBgCheck = document.getElementById('weatherBgEnabled');
     const weatherInfoCheck = document.getElementById('weatherInfoEnabled');
     if (endDayCheck) endDayCheck.checked = notiConfig.endDay;
     if (progressCheck) progressCheck.checked = notiConfig.progress;
     if (hourlyCheck) hourlyCheck.checked = notiConfig.hourly;
+    if (weatherAlertCheck) weatherAlertCheck.checked = notiConfig.weatherAlert;
     if (weatherBgCheck) weatherBgCheck.checked = weatherConfig.bgEnabled;
     if (weatherInfoCheck) weatherInfoCheck.checked = weatherConfig.infoEnabled;
     if (typeof Notification === 'undefined') {
@@ -139,6 +159,7 @@ function updateNotiConfig() {
     notiConfig.endDay = document.getElementById('notiEndDay').checked;
     notiConfig.progress = document.getElementById('notiProgress').checked;
     notiConfig.hourly = document.getElementById('notiHourly').checked;
+    notiConfig.weatherAlert = document.getElementById('notiWeatherAlert').checked;
     localStorage.setItem('week-progress-noti-config', JSON.stringify(notiConfig));
 }
 
@@ -151,7 +172,7 @@ function updateWeatherConfig() {
 }
 
 async function fetchWeather() {
-    if (!weatherConfig.bgEnabled && !weatherConfig.infoEnabled) return;
+    if (!weatherConfig.bgEnabled && !weatherConfig.infoEnabled && !notiConfig.weatherAlert) return;
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(async (position) => {
         const { latitude, longitude } = position.coords;
@@ -159,7 +180,19 @@ async function fetchWeather() {
             const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,relative_humidity_2m&daily=sunrise,sunset&timezone=auto`);
             const data = await response.json();
             currentWeatherData = data;
+            const newCode = data.current.weather_code;
+            // Weather change detection & notification
+            if (notiConfig.weatherAlert && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                const changeMsg = getWeatherChangeMessage(previousWeatherCode, newCode);
+                if (changeMsg) {
+                    new Notification(changeMsg.title, { body: changeMsg.body, icon: NOTI_ICON_DINO });
+                }
+            }
+            previousWeatherCode = newCode;
+            localStorage.setItem('week-progress-prev-weather-code', JSON.stringify(newCode));
             applyWeatherEffects();
+            // Check umbrella reminder at end-of-work
+            checkUmbrellaReminder(newCode);
         } catch (error) {
             console.error("Failed to fetch weather:", error);
         }
@@ -167,6 +200,31 @@ async function fetchWeather() {
         console.log("Geolocation error:", error.message);
         applyWeatherEffects();
     });
+}
+
+function checkUmbrellaReminder(weatherCode) {
+    if (!notiConfig.weatherAlert) return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    if (!isRainyCode(weatherCode)) return;
+    const now = new Date();
+    const curDay = now.getDay();
+    if (curDay === 0 || curDay === 6) return; // weekend
+    const curSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const wEnd = parseTimeToSec(timeConfig.workEnd);
+    const lStart = parseTimeToSec(timeConfig.lunchStart);
+    const todayStr = now.toISOString().split('T')[0];
+    // Remind near lunch start (within 10 minutes before)
+    const lunchDiffMin = (lStart - curSec) / 60;
+    if (lunchDiffMin >= 0 && lunchDiffMin <= 10 && localStorage.getItem('last-noti-umbrella-lunch') !== todayStr) {
+        new Notification('午餐時間下雨中！🌧️', { body: '外出用餐記得帶傘哦！☔', icon: NOTI_ICON_DINO });
+        localStorage.setItem('last-noti-umbrella-lunch', todayStr);
+    }
+    // Remind 30 minutes before end of work
+    const diffMin = (wEnd - curSec) / 60;
+    if (diffMin > 0 && diffMin <= 30 && localStorage.getItem('last-noti-umbrella') !== todayStr) {
+        new Notification('記得帶傘！🌂', { body: '下班時間快到了，外面還在下雨，別忘了帶傘再出門哦！☔', icon: NOTI_ICON_DINO });
+        localStorage.setItem('last-noti-umbrella', todayStr);
+    }
 }
 
 function applyWeatherEffects() {
