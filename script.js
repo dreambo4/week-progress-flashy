@@ -54,18 +54,24 @@ function updateQuote() {
     }
 }
 
-let timeConfig = JSON.parse(localStorage.getItem('week-progress-time-config')) || {
-    workStart: "08:00",
-    workEnd: "17:00",
-    lunchStart: "12:00",
-    lunchEnd: "13:00"
-};
+let timeConfig = JSON.parse(localStorage.getItem('week-progress-time-config')) || {};
+if (!timeConfig.workStart) timeConfig.workStart = "08:00";
+if (!timeConfig.workEnd) timeConfig.workEnd = "17:00";
+if (!timeConfig.lunchStart) timeConfig.lunchStart = "12:00";
+if (!timeConfig.lunchEnd) timeConfig.lunchEnd = "13:00";
+if (!timeConfig.workdays) timeConfig.workdays = [1, 2, 3, 4, 5];
+if (timeConfig.weekId === undefined) timeConfig.weekId = 0;
 
 function openTimeModal() {
     document.getElementById('workStart').value = timeConfig.workStart;
     document.getElementById('workEnd').value = timeConfig.workEnd;
     document.getElementById('lunchStart').value = timeConfig.lunchStart;
     document.getElementById('lunchEnd').value = timeConfig.lunchEnd;
+    
+    document.querySelectorAll('.workday-cb').forEach(cb => {
+        cb.checked = timeConfig.workdays.includes(parseInt(cb.value));
+    });
+    
     document.getElementById('settingsModal').classList.add('active');
     const menu = document.getElementById('themeMenu');
     if (menu) menu.classList.remove('active');
@@ -81,6 +87,13 @@ function saveTimeConfig() {
     timeConfig.workEnd = document.getElementById('workEnd').value;
     timeConfig.lunchStart = document.getElementById('lunchStart').value;
     timeConfig.lunchEnd = document.getElementById('lunchEnd').value;
+    
+    const wdays = [];
+    document.querySelectorAll('.workday-cb').forEach(cb => {
+        if (cb.checked) wdays.push(parseInt(cb.value));
+    });
+    timeConfig.workdays = wdays.length > 0 ? wdays : [1, 2, 3, 4, 5];
+    
     localStorage.setItem('week-progress-time-config', JSON.stringify(timeConfig));
     updateProgress(); 
     closeTimeModal();
@@ -224,7 +237,8 @@ function checkUmbrellaReminder(weatherCode) {
     if (!isRainyCode(weatherCode)) return;
     const now = new Date();
     const curDay = now.getDay();
-    if (curDay === 0 || curDay === 6) return; // weekend
+    const isWorkday = (timeConfig.workdays || [1,2,3,4,5]).includes(curDay);
+    if (!isWorkday) return; 
     const curSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
     const wEnd = parseTimeToSec(timeConfig.workEnd);
     const lStart = parseTimeToSec(timeConfig.lunchStart);
@@ -395,8 +409,11 @@ function announceTime() {
     if (!petStatus) return;
     const now = new Date(), day = now.getDay(), curSec = (now.getHours() * 3600) + (now.getMinutes() * 60);
     const wStart = parseTimeToSec(timeConfig.workStart), wEnd = parseTimeToSec(timeConfig.workEnd);
+    const isWorkday = (timeConfig.workdays || [1,2,3,4,5]).includes(day);
     let msg = "";
-    if (day === 0 || day === 6) msg = "週末萬歲！盡情狂歡吧 🎉";
+    if (!isWorkday) {
+        msg = (day === 0 || day === 6) ? "週末萬歲！盡情狂歡吧 🎉" : "休假中，享受人生 🏖️";
+    }
     else if (curSec < wStart) msg = "還沒開工，再摸一下魚... ☕️";
     else if (curSec >= wEnd) msg = "下班啦！快點回家休息 🍻";
     else {
@@ -412,7 +429,8 @@ function checkMilestones(percentage, now, todayWorkEnd) {
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
     const todayStr = now.toISOString().split('T')[0], curHour = now.getHours();
     const wStart = parseTimeToSec(timeConfig.workStart), wEnd = parseTimeToSec(timeConfig.workEnd);
-    if (notiConfig.endDay && (todayWorkEnd - now <= 10 * 60 * 1000) && (todayWorkEnd - now > 0) && localStorage.getItem('last-noti-10m') !== todayStr) {
+    const isWorkday = (timeConfig.workdays || [1,2,3,4,5]).includes(now.getDay());
+    if (notiConfig.endDay && isWorkday && (todayWorkEnd - now <= 10 * 60 * 1000) && (todayWorkEnd - now > 0) && localStorage.getItem('last-noti-10m') !== todayStr) {
         new Notification("準備下班！🍻", { body: "距離下班只剩 10 分鐘，準備收工！", icon: NOTI_ICON_CLOCK });
         localStorage.setItem('last-noti-10m', todayStr);
         gtag('event', 'notification_sent', { type: 'end_day' });
@@ -429,7 +447,7 @@ function checkMilestones(percentage, now, todayWorkEnd) {
         gtag('event', 'notification_sent', { type: 'progress_90' });
         gtag('event', 'milestone_reached', { type: '90_percent' });
     }
-    if (notiConfig.hourly && (now.getHours() * 3600 >= wStart) && (now.getHours() * 3600 < wEnd) && now.getMinutes() === 0 && localStorage.getItem('last-noti-hourly') !== `${todayStr}-${curHour}`) {
+    if (notiConfig.hourly && isWorkday && (now.getHours() * 3600 >= wStart) && (now.getHours() * 3600 < wEnd) && now.getMinutes() === 0 && localStorage.getItem('last-noti-hourly') !== `${todayStr}-${curHour}`) {
         new Notification("整點到囉！💧", { body: "起來喝口水、去個廁所吧！🦖", icon: NOTI_ICON_WATER });
         localStorage.setItem('last-noti-hourly', `${todayStr}-${curHour}`);
         gtag('event', 'notification_sent', { type: 'hourly_water' });
@@ -443,14 +461,30 @@ function updateProgress() {
     const monday = new Date(now);
     monday.setDate(now.getDate() + (curDay === 0 ? -6 : 1 - curDay));
     monday.setHours(0, 0, 0, 0);
-    const weekStart = new Date(monday); weekStart.setSeconds(wStart);
-    const weekEnd = new Date(monday); weekEnd.setDate(monday.getDate() + 4); weekEnd.setSeconds(wEnd);
+    if (timeConfig.weekId !== monday.getTime()) {
+        timeConfig.workdays = [1, 2, 3, 4, 5];
+        timeConfig.weekId = monday.getTime();
+        localStorage.setItem('week-progress-time-config', JSON.stringify(timeConfig));
+    }
+    
+    let selectedDays = timeConfig.workdays || [1, 2, 3, 4, 5];
+    const getOffset = (day) => day === 0 ? 6 : day - 1;
+    let sortedDays = [...selectedDays].sort((a, b) => getOffset(a) - getOffset(b));
+    const firstDayOffset = getOffset(sortedDays[0]);
+    const lastDayOffset = getOffset(sortedDays[sortedDays.length - 1]);
+    
+    const weekStart = new Date(monday); weekStart.setDate(monday.getDate() + firstDayOffset); weekStart.setSeconds(wStart);
+    const weekEnd = new Date(monday); weekEnd.setDate(monday.getDate() + lastDayOffset); weekEnd.setSeconds(wEnd);
     const todayWorkEnd = new Date(now); todayWorkEnd.setHours(0, 0, 0, 0); todayWorkEnd.setSeconds(wEnd);
-    const totalDuration = weekEnd - weekStart;
+    const totalDuration = Math.max(1000, weekEnd - weekStart);
     let elapsed = now - weekStart;
     let statusText = "努力奮鬥中 🚀", isOff = false, isCeleb = false;
     const curSec = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
-    if (curDay === 0 || curDay === 6) { statusText = (curDay === 6 ? "週末狂歡中 🎉" : "週日充電中 ⚡️"); isOff = true; }
+    
+    if (!selectedDays.includes(curDay)) { 
+        statusText = (curDay === 0 || curDay === 6) ? (curDay === 6 ? "週末狂歡中 🎉" : "週日充電中 ⚡️") : "休假中 🎉"; 
+        isOff = true; 
+    }
     else if (curSec < wStart) statusText = "尚未開工 ☕️";
     else if (curSec >= wEnd) { isOff = true; if (curSec < wEnd + 60) { statusText = "今日已收工 🍻"; isCeleb = true; } else statusText = "下班休息中 🔋"; }
     else if (curSec >= lStart && curSec < lEnd) statusText = "午休充電中 🍱";

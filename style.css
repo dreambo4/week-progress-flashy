@@ -324,6 +324,23 @@ h1 {
     outline: none;
 }
 
+.workdays-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+.workday-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+
 .modal-footer { margin-top: 2rem; text-align: right; }
 
 .save-btn {
