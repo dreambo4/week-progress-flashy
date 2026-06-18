@@ -160,7 +160,7 @@ body {
 /* Rain Effect */
 .rain-drop {
     position: absolute;
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.3);
     width: 2px; height: 15px;
     top: -50px;
     animation: rain-fall linear infinite;
@@ -183,9 +183,9 @@ body {
 }
 @keyframes lightning-strike {
     0%, 93%, 100% { opacity: 0; }
-    94% { opacity: 0.25; }
+    94% { opacity: 0.1; }
     95% { opacity: 0; }
-    96% { opacity: 0.4; }
+    96% { opacity: 0.2; }
     97% { opacity: 0; }
 }
 
