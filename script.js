@@ -69,6 +69,7 @@ function openTimeModal() {
     document.getElementById('settingsModal').classList.add('active');
     const menu = document.getElementById('themeMenu');
     if (menu) menu.classList.remove('active');
+    gtag('event', 'settings_open', { panel: 'time_modal' });
 }
 
 function closeTimeModal() {
@@ -86,6 +87,7 @@ function saveTimeConfig() {
     if (typeof confetti === 'function') {
         confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
     }
+    gtag('event', 'time_config_save', { work_start: timeConfig.workStart, work_end: timeConfig.workEnd, lunch_start: timeConfig.lunchStart, lunch_end: timeConfig.lunchEnd });
 }
 
 function parseTimeToSec(timeStr) {
@@ -125,7 +127,9 @@ async function requestNotiPermission() {
         alert("此瀏覽器不支援通知功能 🚫");
         return;
     }
+    gtag('event', 'notification_permission', { action: 'request' });
     const permission = await Notification.requestPermission();
+    gtag('event', 'notification_permission', { action: permission });
     updateNotiUI();
     if (permission === 'granted') {
         new Notification("權限已開啟！", { body: "小恐龍現在可以提醒你囉 🦖", icon: NOTI_ICON_DINO });
@@ -156,19 +160,27 @@ function updateNotiUI() {
 }
 
 function updateNotiConfig() {
+    const prev = { ...notiConfig };
     notiConfig.endDay = document.getElementById('notiEndDay').checked;
     notiConfig.progress = document.getElementById('notiProgress').checked;
     notiConfig.hourly = document.getElementById('notiHourly').checked;
     notiConfig.weatherAlert = document.getElementById('notiWeatherAlert').checked;
     localStorage.setItem('week-progress-noti-config', JSON.stringify(notiConfig));
+    if (prev.endDay !== notiConfig.endDay) gtag('event', 'notification_toggle', { type: 'end_day', enabled: notiConfig.endDay });
+    if (prev.progress !== notiConfig.progress) gtag('event', 'notification_toggle', { type: 'progress', enabled: notiConfig.progress });
+    if (prev.hourly !== notiConfig.hourly) gtag('event', 'notification_toggle', { type: 'hourly', enabled: notiConfig.hourly });
+    if (prev.weatherAlert !== notiConfig.weatherAlert) gtag('event', 'notification_toggle', { type: 'weather_alert', enabled: notiConfig.weatherAlert });
 }
 
 function updateWeatherConfig() {
+    const prevBg = weatherConfig.bgEnabled, prevInfo = weatherConfig.infoEnabled;
     weatherConfig.bgEnabled = document.getElementById('weatherBgEnabled').checked;
     weatherConfig.infoEnabled = document.getElementById('weatherInfoEnabled').checked;
     localStorage.setItem('week-progress-weather-config', JSON.stringify(weatherConfig));
     applyWeatherEffects();
     if (weatherConfig.bgEnabled || weatherConfig.infoEnabled) fetchWeather();
+    if (prevBg !== weatherConfig.bgEnabled) gtag('event', 'weather_toggle', { type: 'bg', enabled: weatherConfig.bgEnabled });
+    if (prevInfo !== weatherConfig.infoEnabled) gtag('event', 'weather_toggle', { type: 'info', enabled: weatherConfig.infoEnabled });
 }
 
 async function fetchWeather() {
@@ -181,11 +193,15 @@ async function fetchWeather() {
             const data = await response.json();
             currentWeatherData = data;
             const newCode = data.current.weather_code;
+            gtag('event', 'weather_fetched', { weather_code: newCode, temperature: data.current.temperature_2m, humidity: data.current.relative_humidity_2m });
             // Weather change detection & notification
             if (notiConfig.weatherAlert && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                 const changeMsg = getWeatherChangeMessage(previousWeatherCode, newCode);
                 if (changeMsg) {
                     new Notification(changeMsg.title, { body: changeMsg.body, icon: NOTI_ICON_DINO });
+                    gtag('event', 'notification_sent', { type: 'weather_change' });
+                    const changeType = isRainyCode(newCode) ? (newCode >= 95 ? 'storm_start' : 'rain_start') : (previousWeatherCode >= 95 ? 'storm_end' : 'rain_stop');
+                    gtag('event', 'weather_change_detected', { from_code: previousWeatherCode, to_code: newCode, change_type: changeType });
                 }
             }
             previousWeatherCode = newCode;
@@ -218,12 +234,14 @@ function checkUmbrellaReminder(weatherCode) {
     if (lunchDiffMin >= 0 && lunchDiffMin <= 10 && localStorage.getItem('last-noti-umbrella-lunch') !== todayStr) {
         new Notification('午餐時間下雨中！🌧️', { body: '外出用餐記得帶傘哦！☔', icon: NOTI_ICON_DINO });
         localStorage.setItem('last-noti-umbrella-lunch', todayStr);
+        gtag('event', 'notification_sent', { type: 'umbrella_lunch' });
     }
     // Remind 30 minutes before end of work
     const diffMin = (wEnd - curSec) / 60;
     if (diffMin > 0 && diffMin <= 30 && localStorage.getItem('last-noti-umbrella') !== todayStr) {
         new Notification('記得帶傘！🌂', { body: '下班時間快到了，外面還在下雨，別忘了帶傘再出門哦！☔', icon: NOTI_ICON_DINO });
         localStorage.setItem('last-noti-umbrella', todayStr);
+        gtag('event', 'notification_sent', { type: 'umbrella_work' });
     }
 }
 
@@ -310,10 +328,12 @@ function createWeatherVisuals(code) {
 }
 
 function setTheme(theme) {
+    const prevTheme = document.body.getAttribute('data-theme');
     document.body.setAttribute('data-theme', theme);
     localStorage.setItem('week-progress-theme', theme);
     const menu = document.getElementById('themeMenu');
     if (menu) menu.classList.remove('active');
+    if (prevTheme && prevTheme !== theme) gtag('event', 'theme_change', { theme_name: theme });
 }
 
 let lastCelebrationDay = -1;
@@ -339,6 +359,7 @@ function feedPet() {
         setTimeout(() => { isAnnouncing = false; updatePetStatus(); }, 1500);
         if (typeof confetti === 'function') { confetti({ particleCount: 20, spread: 30, origin: { y: 0.9 } }); }
     }
+    gtag('event', 'pet_interact', { action: 'feed', hunger_level: Math.round(petHunger) });
 }
 
 function patPet() {
@@ -351,6 +372,7 @@ function patPet() {
         isAnnouncing = true;
         setTimeout(() => { isAnnouncing = false; updatePetStatus(); }, 2000);
     }
+    gtag('event', 'pet_interact', { action: 'pat', hunger_level: Math.round(petHunger) });
 }
 
 function updatePetStatus() {
@@ -389,18 +411,24 @@ function checkMilestones(percentage, now, todayWorkEnd) {
     if (notiConfig.endDay && (todayWorkEnd - now <= 10 * 60 * 1000) && (todayWorkEnd - now > 0) && localStorage.getItem('last-noti-10m') !== todayStr) {
         new Notification("準備下班！🍻", { body: "距離下班只剩 10 分鐘，準備收工！", icon: NOTI_ICON_CLOCK });
         localStorage.setItem('last-noti-10m', todayStr);
+        gtag('event', 'notification_sent', { type: 'end_day' });
     }
     if (notiConfig.progress && percentage >= 50 && percentage < 90 && localStorage.getItem('last-noti-50p') !== todayStr) {
         new Notification("本週已過一半！🌓", { body: "加油！再撐一下就週末了！🦖", icon: NOTI_ICON_DINO });
         localStorage.setItem('last-noti-50p', todayStr);
+        gtag('event', 'notification_sent', { type: 'progress_50' });
+        gtag('event', 'milestone_reached', { type: '50_percent' });
     }
     if (notiConfig.progress && percentage >= 90 && percentage < 100 && localStorage.getItem('last-noti-90p') !== todayStr) {
         new Notification("本週進度 90%！🏁", { body: "做得好！勝利就在眼前！", icon: NOTI_ICON_DINO });
         localStorage.setItem('last-noti-90p', todayStr);
+        gtag('event', 'notification_sent', { type: 'progress_90' });
+        gtag('event', 'milestone_reached', { type: '90_percent' });
     }
     if (notiConfig.hourly && (now.getHours() * 3600 >= wStart) && (now.getHours() * 3600 < wEnd) && now.getMinutes() === 0 && localStorage.getItem('last-noti-hourly') !== `${todayStr}-${curHour}`) {
         new Notification("整點到囉！💧", { body: "起來喝口水、去個廁所吧！🦖", icon: NOTI_ICON_WATER });
         localStorage.setItem('last-noti-hourly', `${todayStr}-${curHour}`);
+        gtag('event', 'notification_sent', { type: 'hourly_water' });
     }
 }
 
@@ -425,7 +453,7 @@ function updateProgress() {
     if (now < weekStart) elapsed = 0; else if (now > weekEnd) elapsed = totalDuration;
     const perc = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
     checkMilestones(perc, now, todayWorkEnd);
-    if (isCeleb) { document.body.classList.add('celebration-mode'); if (lastCelebrationDay !== curDay) { triggerCelebration(); lastCelebrationDay = curDay; } }
+    if (isCeleb) { document.body.classList.add('celebration-mode'); if (lastCelebrationDay !== curDay) { triggerCelebration(); lastCelebrationDay = curDay; gtag('event', 'celebration_triggered', { day_of_week: curDay }); gtag('event', 'milestone_reached', { type: '100_percent' }); } }
     else { document.body.classList.remove('celebration-mode'); if (!isOff) lastCelebrationDay = -1; }
     const title = document.getElementById('title'), pBar = document.getElementById('progressBar'), pText = document.getElementById('percentText'), tLeft = document.getElementById('timeLeft'), dLabel = document.getElementById('currentDay');
     if (title) title.textContent = statusText;
@@ -456,7 +484,7 @@ function initPet() {
 
 const savedTheme = localStorage.getItem('week-progress-theme') || 'neon';
 setTheme(savedTheme);
-document.getElementById('settingsBtn').onclick = (e) => { e.stopPropagation(); document.getElementById('themeMenu').classList.toggle('active'); };
+document.getElementById('settingsBtn').onclick = (e) => { e.stopPropagation(); document.getElementById('themeMenu').classList.toggle('active'); gtag('event', 'settings_open', { panel: 'menu' }); };
 window.onclick = (e) => { 
     if (document.getElementById('themeMenu')) document.getElementById('themeMenu').classList.remove('active'); 
     if (e.target === document.getElementById('settingsModal')) closeTimeModal(); 
@@ -467,3 +495,13 @@ updateNotiUI();
 fetchWeather();
 setInterval(updateProgress, 1000);
 setInterval(fetchWeather, 30 * 60 * 1000);
+
+// GA: page_load event
+(function() {
+    const now = new Date();
+    const curSec = now.getHours() * 3600 + now.getMinutes() * 60;
+    const wStart = parseTimeToSec(timeConfig.workStart), wEnd = parseTimeToSec(timeConfig.workEnd);
+    const dayOfWeek = now.getDay();
+    const isWorkHour = dayOfWeek >= 1 && dayOfWeek <= 5 && curSec >= wStart && curSec < wEnd;
+    gtag('event', 'page_load', { theme: savedTheme, day_of_week: dayOfWeek, is_work_hour: isWorkHour });
+})();
