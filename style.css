@@ -160,9 +160,9 @@ body {
 /* Rain Effect */
 .rain-drop {
     position: absolute;
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.15);
     width: 2px; height: 15px;
-    top: -20px;
+    top: -50px;
     animation: rain-fall linear infinite;
 }
 @keyframes rain-fall {
@@ -171,7 +171,7 @@ body {
 
 /* Storm Effect */
 .storm-drop {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.25);
     width: 3px; height: 30px;
 }
 .lightning-flash {
@@ -183,9 +183,9 @@ body {
 }
 @keyframes lightning-strike {
     0%, 93%, 100% { opacity: 0; }
-    94% { opacity: 0.6; }
+    94% { opacity: 0.25; }
     95% { opacity: 0; }
-    96% { opacity: 0.8; }
+    96% { opacity: 0.4; }
     97% { opacity: 0; }
 }
 
