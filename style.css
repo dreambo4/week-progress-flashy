@@ -169,6 +169,26 @@ body {
     to { transform: translateY(100vh); }
 }
 
+/* Storm Effect */
+.storm-drop {
+    background-color: rgba(255, 255, 255, 0.5);
+    width: 3px; height: 30px;
+}
+.lightning-flash {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: white;
+    opacity: 0;
+    animation: lightning-strike 7s infinite;
+}
+@keyframes lightning-strike {
+    0%, 93%, 100% { opacity: 0; }
+    94% { opacity: 0.6; }
+    95% { opacity: 0; }
+    96% { opacity: 0.8; }
+    97% { opacity: 0; }
+}
+
 /* Cloud Effect */
 .cloud {
     position: absolute;

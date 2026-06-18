@@ -317,11 +317,15 @@ function createWeatherVisuals(code) {
             bgContainer.appendChild(drop);
         }
     } else if (code >= 95) {
-        for (let i = 0; i < 100; i++) {
+        const flash = document.createElement('div');
+        flash.className = 'lightning-flash';
+        bgContainer.appendChild(flash);
+        for (let i = 0; i < 150; i++) {
             const drop = document.createElement('div');
-            drop.className = 'rain-drop';
+            drop.className = 'rain-drop storm-drop';
             drop.style.left = Math.random() * 100 + 'vw';
-            drop.style.animationDuration = '0.5s';
+            drop.style.animationDuration = (0.2 + Math.random() * 0.3) + 's';
+            drop.style.animationDelay = Math.random() * 1 + 's';
             bgContainer.appendChild(drop);
         }
     }
