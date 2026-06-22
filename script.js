@@ -31,6 +31,8 @@ const ENCOURAGEMENTS = [
 
 let lastQuoteIndex = -1;
 let lastQuoteTime = 0;
+let userLat = null;
+let userLon = null;
 
 function updateQuote() {
     const quoteElem = document.getElementById('quote');
@@ -197,10 +199,13 @@ function updateWeatherConfig() {
 }
 
 async function fetchWeather() {
-    if (!weatherConfig.bgEnabled && !weatherConfig.infoEnabled && !notiConfig.weatherAlert) return;
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(async (position) => {
         const { latitude, longitude } = position.coords;
+        userLat = latitude;
+        userLon = longitude;
+        updateSolarAngle();
+        if (!weatherConfig.bgEnabled && !weatherConfig.infoEnabled && !notiConfig.weatherAlert) return;
         try {
             const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,relative_humidity_2m&daily=sunrise,sunset&timezone=auto`);
             const data = await response.json();
@@ -536,11 +541,25 @@ window.onclick = (e) => {
     if (document.getElementById('themeMenu')) document.getElementById('themeMenu').classList.remove('active'); 
     if (e.target === document.getElementById('settingsModal')) closeTimeModal(); 
 };
+function updateSolarAngle() {
+    if (userLat === null || userLon === null || typeof SunCalc === 'undefined') return;
+    
+    const now = new Date();
+    const pos = SunCalc.getPosition(now, userLat, userLon);
+    const altitude = (pos.altitude * 180 / Math.PI).toFixed(1);
+    const azimuth = (pos.azimuth * 180 / Math.PI).toFixed(1);
+    
+    // 未來可以將 altitude / azimuth 用於動態背景特效
+}
+
 initPet();
 updateProgress();
 updateNotiUI();
 fetchWeather();
-setInterval(updateProgress, 1000);
+setInterval(() => {
+    updateProgress();
+    updateSolarAngle();
+}, 1000);
 setInterval(fetchWeather, 30 * 60 * 1000);
 
 // GA: page_load event
