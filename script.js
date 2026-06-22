@@ -308,6 +308,15 @@ function createWeatherVisuals(code) {
     if (code === 0) {
         const sun = document.createElement('div');
         sun.className = 'sun-container';
+        const sunGlow = document.createElement('div');
+        sunGlow.className = 'sun-glow';
+        const sunRays = document.createElement('div');
+        sunRays.className = 'sun-rays';
+        const sunCore = document.createElement('div');
+        sunCore.className = 'sun-core';
+        sun.appendChild(sunGlow);
+        sun.appendChild(sunRays);
+        sun.appendChild(sunCore);
         bgContainer.appendChild(sun);
     } else if (code <= 3) {
         for (let i = 0; i < 3; i++) {
