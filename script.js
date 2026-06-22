@@ -313,6 +313,7 @@ function createWeatherVisuals(code) {
     if (code === 0) {
         const sun = document.createElement('div');
         sun.className = 'sun-container';
+        sun.id = 'dynamicSun';
         const sunGlow = document.createElement('div');
         sunGlow.className = 'sun-glow';
         const sunRays = document.createElement('div');
@@ -546,10 +547,22 @@ function updateSolarAngle() {
     
     const now = new Date();
     const pos = SunCalc.getPosition(now, userLat, userLon);
-    const altitude = (pos.altitude * 180 / Math.PI).toFixed(1);
-    const azimuth = (pos.azimuth * 180 / Math.PI).toFixed(1);
+    const altitude = pos.altitude * 180 / Math.PI;
+    const azimuth = pos.azimuth * 180 / Math.PI;
     
-    // 未來可以將 altitude / azimuth 用於動態背景特效
+    // 動態更新太陽位置
+    const sun = document.getElementById('dynamicSun');
+    if (sun) {
+        // 仰角對應到垂直位置 (限制在畫面上方，0度地平線=25%, 90度天頂=-10%)
+        let topPercent = Math.max(-10, Math.min(25, 25 - (altitude / 90 * 35)));
+        // 方位角對應到水平位置 (東-90=10%, 南0=50%, 西+90=90%)，稍微內縮避免太靠邊緣
+        let leftPercent = Math.max(-10, Math.min(110, 50 + (azimuth / 90 * 45)));
+        
+        sun.style.top = topPercent + '%';
+        sun.style.left = leftPercent + '%';
+        sun.style.right = 'auto'; // 覆寫原本 CSS 綁死的 right
+        sun.style.transform = 'translate(-50%, -50%)'; // 讓太陽中心點對齊座標
+    }
 }
 
 initPet();
