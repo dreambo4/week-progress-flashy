@@ -228,14 +228,41 @@ body {
 /* Cloud Effect */
 .cloud {
     position: absolute;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50px;
-    filter: blur(15px);
-    animation: cloud-move linear infinite;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    filter: blur(12px);
+    opacity: 0;
+    animation: cloud-drift linear infinite, cloud-fade 4s ease-out forwards;
 }
-@keyframes cloud-move {
-    from { left: -200px; }
-    to { left: 100vw; }
+.cloud::before,
+.cloud::after {
+    content: '';
+    position: absolute;
+    background: inherit;
+    border-radius: 50%;
+}
+.cloud::before {
+    width: 55%;
+    height: 70%;
+    top: -35%;
+    left: 18%;
+}
+.cloud::after {
+    width: 40%;
+    height: 55%;
+    top: -20%;
+    right: 18%;
+}
+@keyframes cloud-drift {
+    0%   { transform: translateX(0) translateY(0); }
+    25%  { transform: translateX(25vw) translateY(-8px); }
+    50%  { transform: translateX(50vw) translateY(4px); }
+    75%  { transform: translateX(75vw) translateY(-6px); }
+    100% { transform: translateX(calc(100vw + 100%)) translateY(0); }
+}
+@keyframes cloud-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 .scanlines {

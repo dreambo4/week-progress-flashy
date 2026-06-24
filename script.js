@@ -325,16 +325,24 @@ function createWeatherVisuals(code) {
         sun.appendChild(sunCore);
         bgContainer.appendChild(sun);
     } else if (code <= 3) {
-        for (let i = 0; i < 3; i++) {
+        const cloudConfigs = [
+            { top: 3,  w: 180, h: 50, speed: 50, delay: -5  },
+            { top: 8,  w: 240, h: 65, speed: 60, delay: -18 },
+            { top: 14, w: 160, h: 45, speed: 45, delay: -30 },
+            { top: 5,  w: 200, h: 55, speed: 55, delay: -10 },
+            { top: 11, w: 140, h: 40, speed: 48, delay: -24 },
+        ];
+        cloudConfigs.forEach(cfg => {
             const cloud = document.createElement('div');
             cloud.className = 'cloud';
-            cloud.style.top = (15 + i * 20) + '%';
-            cloud.style.width = (150 + Math.random() * 150) + 'px';
-            cloud.style.height = '60px';
-            cloud.style.animationDuration = (40 + Math.random() * 40) + 's';
-            cloud.style.animationDelay = (i * -15) + 's';
+            cloud.style.top = (cfg.top + Math.random() * 3) + '%';
+            cloud.style.left = -(cfg.w + 50) + 'px';
+            cloud.style.width = (cfg.w + Math.random() * 60) + 'px';
+            cloud.style.height = cfg.h + 'px';
+            cloud.style.animationDuration = (cfg.speed + Math.random() * 10) + 's';
+            cloud.style.animationDelay = cfg.delay + 's';
             bgContainer.appendChild(cloud);
-        }
+        });
     } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
         const dropCount = code > 63 ? 80 : 40;
         for (let i = 0; i < dropCount; i++) {
