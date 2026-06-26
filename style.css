@@ -473,6 +473,12 @@ h1 {
 
 .menu.active { display: flex; }
 
+.menu-brand {
+    font-size: 1.1rem; font-weight: 800; text-align: center;
+    color: var(--primary-color); padding: 8px 15px 6px;
+    letter-spacing: 0.5px;
+}
+
 .menu-section-title {
     font-size: 0.7rem; color: var(--text-color); opacity: 0.5;
     padding: 5px 15px; text-transform: uppercase; letter-spacing: 1px;
