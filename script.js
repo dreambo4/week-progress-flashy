@@ -325,24 +325,28 @@ function createWeatherVisuals(code) {
         sun.appendChild(sunCore);
         bgContainer.appendChild(sun);
     } else if (code <= 3) {
-        const cloudConfigs = [
-            { top: 3,  w: 180, h: 50, speed: 50, delay: -5  },
-            { top: 8,  w: 240, h: 65, speed: 60, delay: -18 },
-            { top: 14, w: 160, h: 45, speed: 45, delay: -30 },
-            { top: 5,  w: 200, h: 55, speed: 55, delay: -10 },
-            { top: 11, w: 140, h: 40, speed: 48, delay: -24 },
-        ];
-        cloudConfigs.forEach(cfg => {
+        const rand = (min, max) => Math.round(min + Math.random() * (max - min));
+        const count = rand(3, 7);
+        for (let i = 0; i < count; i++) {
             const cloud = document.createElement('div');
             cloud.className = 'cloud';
-            cloud.style.top = (cfg.top + Math.random() * 3) + '%';
-            cloud.style.left = -(cfg.w + 50) + 'px';
-            cloud.style.width = (cfg.w + Math.random() * 60) + 'px';
-            cloud.style.height = cfg.h + 'px';
-            cloud.style.animationDuration = (cfg.speed + Math.random() * 10) + 's';
-            cloud.style.animationDelay = cfg.delay + 's';
+            const w = rand(220, 420);
+            cloud.style.top = rand(2, 18) + '%';
+            cloud.style.left = -(w + 50) + 'px';
+            cloud.style.width = w + 'px';
+            cloud.style.height = rand(60, 110) + 'px';
+            cloud.style.animationDuration = rand(40, 70) + 's';
+            cloud.style.animationDelay = -rand(0, 60) + 's';
+            cloud.style.setProperty('--b1-w', rand(45, 75) + '%');
+            cloud.style.setProperty('--b1-h', rand(60, 100) + '%');
+            cloud.style.setProperty('--b1-top', -rand(25, 50) + '%');
+            cloud.style.setProperty('--b1-left', rand(8, 30) + '%');
+            cloud.style.setProperty('--b2-w', rand(35, 60) + '%');
+            cloud.style.setProperty('--b2-h', rand(50, 80) + '%');
+            cloud.style.setProperty('--b2-top', -rand(15, 40) + '%');
+            cloud.style.setProperty('--b2-right', rand(8, 25) + '%');
             bgContainer.appendChild(cloud);
-        });
+        }
     } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
         const dropCount = code > 63 ? 80 : 40;
         for (let i = 0; i < dropCount; i++) {
