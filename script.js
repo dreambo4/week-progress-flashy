@@ -568,9 +568,10 @@ function updateSolarAngle() {
         // 仰角對應到垂直位置 (0度地平線=20%, 90度天頂=0%)
         // 這樣能保證太陽不會掉得太下面擋住主卡片
         let topPercent = Math.max(0, Math.min(20, 20 - (altitude / 90 * 20)));
-        // 方位角對應到水平位置 (東-90=15%, 南0=50%, 西+90=85%)
+        // 方位角對應到水平位置 (東-90=85%, 南0=50%, 西+90=15%)
+        // 早上太陽從右邊(東)升起，傍晚落到左邊(西)
         // 內縮範圍 (15% ~ 85%) 避免太陽被左右邊緣裁切
-        let leftPercent = Math.max(15, Math.min(85, 50 + (azimuth / 90 * 35)));
+        let leftPercent = Math.max(15, Math.min(85, 50 - (azimuth / 90 * 35)));
         
         sun.style.top = topPercent + '%';
         sun.style.left = leftPercent + '%';
