@@ -452,7 +452,7 @@ h1 {
     gap: 5px;
     z-index: 1000;
     width: 240px;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100vh - 265px); /* top 75px + 恐龍區 180px + 間距 10px，底端停在恐龍活動區之上 */
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--primary-color) transparent;
@@ -548,9 +548,10 @@ input:checked + .slider:before { transform: translateX(14px); }
 }
 
 .pet-dino {
-    width: 44px; height: 47px;
+    width: 48.4px; height: 51.7px;
     background-image: url('sprite.png');
-    background-repeat: no-repeat; background-position: -40px -2px;
+    background-size: 1356.3px 74.8px; /* 原圖 1233x68 放大 1.1 倍，position 需同步 x1.1 */
+    background-repeat: no-repeat; background-position: -44px -2.2px;
     transition: transform 0.3s; cursor: pointer !important;
     user-select: none; image-rendering: pixelated;
     filter: drop-shadow(0 0 2px #fff); margin-bottom: 12px;
@@ -558,8 +559,8 @@ input:checked + .slider:before { transform: translateX(14px); }
 }
 
 .pet-dino.walking { animation: dino-run 0.2s steps(1) infinite; }
-@keyframes dino-run { 0% { background-position: -936px -2px; } 50% { background-position: -980px -2px; } }
-.pet-dino.dead { background-position: -1068px -2px; }
+@keyframes dino-run { 0% { background-position: -1029.6px -2.2px; } 50% { background-position: -1078px -2.2px; } }
+.pet-dino.dead { background-position: -1174.8px -2.2px; }
 .pet-dino.happy { filter: drop-shadow(0 0 10px #ff0) brightness(1.2); }
 .pet-dino.hungry { filter: grayscale(1) opacity(0.7); }
 
