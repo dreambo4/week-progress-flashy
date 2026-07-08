@@ -303,6 +303,9 @@ h1 {
     font-weight: 800;
 }
 
+/* h1 漸層文字會把 emoji 染成色塊，emoji 需獨立 span 還原原生顏色 */
+h1 .title-emoji { background: none; -webkit-text-fill-color: initial; }
+
 .quote-text {
     font-size: clamp(0.85rem, 3vw, 1.1rem);
     font-style: italic;
@@ -552,6 +555,7 @@ input:checked + .slider:before { transform: translateX(14px); }
     background-image: url('sprite.png');
     background-size: 1356.3px 74.8px; /* 原圖 1233x68 放大 1.1 倍，position 需同步 x1.1 */
     background-repeat: no-repeat; background-position: -44px -2.2px;
+    transform: var(--flip, none);
     transition: transform 0.3s; cursor: pointer !important;
     user-select: none; image-rendering: pixelated;
     filter: drop-shadow(0 0 2px #fff); margin-bottom: 12px;
@@ -560,9 +564,49 @@ input:checked + .slider:before { transform: translateX(14px); }
 
 .pet-dino.walking { animation: dino-run 0.2s steps(1) infinite; }
 @keyframes dino-run { 0% { background-position: -1029.6px -2.2px; } 50% { background-position: -1078px -2.2px; } }
-.pet-dino.dead { background-position: -1174.8px -2.2px; }
+
+/* 開心小跳：transform 帶上 --flip 保留恐龍面向 */
+.pet-dino.jumping { animation: dino-jump 0.7s ease; }
+@keyframes dino-jump {
+    0%, 55%, 100% { transform: var(--flip, none) translateY(0); }
+    25% { transform: var(--flip, none) translateY(-18px); }
+    80% { transform: var(--flip, none) translateY(-10px); }
+}
+
+/* 蹲下 frame（原圖 x=1112 寬 59，乘 1.1）：拍拍/暴雨/午睡共用 */
+.pet-dino.ducking, .pet-dino.scared, .pet-container.napping .pet-dino {
+    width: 64.9px;
+    background-position: -1223.2px -2.2px;
+    animation: none;
+}
+
+/* 暴雨害怕發抖（偶發彩蛋，約 5 秒） */
+.pet-dino.scared { animation: dino-shake 0.2s infinite; }
+@keyframes dino-shake {
+    0%, 100% { transform: var(--flip, none) translateX(0); }
+    25% { transform: var(--flip, none) translateX(-2px); }
+    75% { transform: var(--flip, none) translateX(2px); }
+}
+
+/* 午睡 Zzz 泡泡 */
+.pet-container.napping::after {
+    content: '💤';
+    position: absolute;
+    bottom: 100px; left: 58%;
+    font-size: 1rem;
+    pointer-events: none;
+    animation: zzz-float 2.5s ease-out infinite;
+}
+@keyframes zzz-float {
+    0% { opacity: 0; transform: translate(0, 0) scale(0.7); }
+    30% { opacity: 1; }
+    100% { opacity: 0; transform: translate(10px, -26px) scale(1.15); }
+}
+
 .pet-dino.happy { filter: drop-shadow(0 0 10px #ff0) brightness(1.2); }
 .pet-dino.hungry { filter: grayscale(1) opacity(0.7); }
+/* dead 放最後：優先權蓋過 ducking/scared，死掉時不再蹲下發抖 */
+.pet-dino.dead { background-position: -1174.8px -2.2px; width: 48.4px; animation: none; }
 
 .pet-actions { display: flex; gap: 15px; justify-content: center; pointer-events: auto !important; }
 .pet-actions button {

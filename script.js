@@ -4,7 +4,7 @@ const WORK_DAYS = 5;
 const TOTAL_WORK_HOURS_PER_DAY = WORK_END_HOUR - WORK_START_HOUR;
 const TOTAL_WORK_SECONDS_PER_WEEK = WORK_DAYS * TOTAL_WORK_HOURS_PER_DAY * 3600;
 
-console.log("Week Progress Script Loaded v1.4.1");
+console.log("Week Progress Script Loaded v1.5.3");
 
 const ENCOURAGEMENTS = [
     "加油！每一秒的努力都在成就更好的自己。🚀",
@@ -29,6 +29,17 @@ const ENCOURAGEMENTS = [
     "生活不只有眼前的苟且，還有遠方的甲方。😒"
 ];
 
+const LUNCH_QUOTES = [
+    "吃飽才有力氣摸魚。🍱",
+    "午睡二十分鐘，下午生龍活虎。😴",
+    "先吃飯，天大的事下午再說。🍜",
+    "午休是上班族的合法充電時間。🔋",
+    "離開座位走走，眼睛也放個假。🌿",
+    "吃什麼不重要，重要的是不在座位上吃。🚶",
+    "小恐龍午睡中，請勿打擾。💤",
+    "半天過去了，你已經很棒了。✨"
+];
+
 let lastQuoteIndex = -1;
 let lastQuoteTime = 0;
 let userLat = null;
@@ -37,22 +48,26 @@ let userLon = null;
 function updateQuote() {
     const quoteElem = document.getElementById('quote');
     if (!quoteElem) return;
+    const mode = isLunchBreak(new Date()) ? 'lunch' : 'work';
+    const pool = mode === 'lunch' ? LUNCH_QUOTES : ENCOURAGEMENTS;
     const now = Date.now();
     const savedQuote = localStorage.getItem('week-progress-quote');
     const savedQuoteTime = localStorage.getItem('week-progress-quote-time');
+    const savedMode = localStorage.getItem('week-progress-quote-mode') || 'work';
     const ROTATION_MS = 5 * 60 * 1000;
-    if (savedQuote !== null && savedQuoteTime !== null && (now - savedQuoteTime < ROTATION_MS)) {
+    if (savedMode === mode && savedQuote !== null && savedQuoteTime !== null && (now - savedQuoteTime < ROTATION_MS) && parseInt(savedQuote) < pool.length) {
         lastQuoteIndex = parseInt(savedQuote);
         lastQuoteTime = parseInt(savedQuoteTime);
-        quoteElem.textContent = ENCOURAGEMENTS[lastQuoteIndex];
+        quoteElem.textContent = pool[lastQuoteIndex];
     } else {
         let newIndex;
-        do { newIndex = Math.floor(Math.random() * ENCOURAGEMENTS.length); } while (newIndex === lastQuoteIndex && ENCOURAGEMENTS.length > 1);
+        do { newIndex = Math.floor(Math.random() * pool.length); } while (newIndex === lastQuoteIndex && pool.length > 1);
         lastQuoteIndex = newIndex;
         lastQuoteTime = now;
-        quoteElem.textContent = ENCOURAGEMENTS[lastQuoteIndex];
+        quoteElem.textContent = pool[lastQuoteIndex];
         localStorage.setItem('week-progress-quote', lastQuoteIndex);
         localStorage.setItem('week-progress-quote-time', lastQuoteTime);
+        localStorage.setItem('week-progress-quote-mode', mode);
     }
 }
 
@@ -108,6 +123,12 @@ function saveTimeConfig() {
 function parseTimeToSec(timeStr) {
     const [h, m] = timeStr.split(':').map(Number);
     return h * 3600 + m * 60;
+}
+
+function isLunchBreak(now) {
+    if (!(timeConfig.workdays || [1, 2, 3, 4, 5]).includes(now.getDay())) return false;
+    const curSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    return curSec >= parseTimeToSec(timeConfig.lunchStart) && curSec < parseTimeToSec(timeConfig.lunchEnd);
 }
 
 const NOTI_ICON_DINO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAvCAAAAAC9e3dzAAAAAnRSTlMAAHaTzTgAAADaSURBVHic1ZQ7EoUwCEXRocn6bFkereujfRNjjIT4CWrxaMzA9c4ZQgD4KoZ2Whq5AHgkpSrHADA+xhDjm7xPnOe5znRh4HFpgkfO4x+K8UrAXuchjU3YpdpjFLqZBWjPJaB8+aVuiLbdIridaXtzVJVJcXuYafnf4rLK+bpBb88GXgmC2zkcrJRuDFYQi/i+9wj9i1Gat6d74V25UnlbX/+SYdZfG2gXa4m6hnm9z+triReR+GviZ1PHDT8jPiM34kieXqGs3uVU4j7zBDBEgNSRvDtiN/JJxw/71S1l4zrV3AAAAABJRU5ErkJggg==";
@@ -273,6 +294,7 @@ function applyWeatherEffects() {
     const sunsetTime = document.getElementById('sunsetTime');
     const humidityVal = document.getElementById('humidityVal');
     if (!bgContainer) return;
+    isStormy = !!(currentWeatherData && currentWeatherData.current.weather_code >= 95);
     bgContainer.innerHTML = ''; 
     if (!currentWeatherData) {
         if (infoBox) infoBox.style.display = 'none';
@@ -393,10 +415,31 @@ function triggerCelebration() {
     }, 250);
 }
 
-let petHunger = 100, petPos = 50, isAnnouncing = false;
+let petHunger = 100, petPos = 50, isAnnouncing = false, isStormy = false;
+
+function happyJump() {
+    const pet = document.getElementById('pet');
+    if (!pet || petHunger <= 0 || pet.classList.contains('jumping')) return;
+    pet.classList.add('jumping');
+    setTimeout(() => pet.classList.remove('jumping'), 700);
+}
+
+function scareDino() {
+    const pet = document.getElementById('pet'), petStatus = document.getElementById('petStatus');
+    if (!pet || petHunger <= 0 || pet.classList.contains('scared')) return;
+    pet.classList.add('scared');
+    if (petStatus) { isAnnouncing = true; petStatus.textContent = "打雷好可怕...🫣"; }
+    setTimeout(() => {
+        pet.classList.remove('scared');
+        // 緩衝台詞：避免嚇完下一秒馬上「跑得很開心」的情緒斷層
+        if (petStatus) petStatus.textContent = "呼...嚇死我了 😮‍💨";
+        setTimeout(() => { isAnnouncing = false; updatePetStatus(); }, 5000);
+    }, 5000);
+}
 
 function feedPet() {
     petHunger = Math.min(100, petHunger + 30);
+    happyJump();
     const petStatus = document.getElementById('petStatus');
     if (petStatus) {
         petStatus.textContent = "好吃！加點體力 🍱";
@@ -410,9 +453,8 @@ function feedPet() {
 function patPet() {
     const pet = document.getElementById('pet'), petStatus = document.getElementById('petStatus');
     if (pet && petStatus) {
-        const currentTransform = pet.style.transform || "";
-        pet.style.transform = `${currentTransform} scale(1.3)`;
-        setTimeout(() => { pet.style.transform = currentTransform; }, 300);
+        pet.classList.add('ducking');
+        setTimeout(() => pet.classList.remove('ducking'), 1000);
         petStatus.textContent = "❤️";
         isAnnouncing = true;
         setTimeout(() => { isAnnouncing = false; updatePetStatus(); }, 2000);
@@ -423,12 +465,15 @@ function patPet() {
 function updatePetStatus() {
     if (isAnnouncing) return;
     const petStatus = document.getElementById('petStatus'), pet = document.getElementById('pet');
+    const container = document.getElementById('petContainer');
     if (!petStatus || !pet) return;
     pet.classList.remove('hungry', 'happy', 'dead');
-    if (petHunger > 80) { petStatus.textContent = "小恐龍跑得很開心！🦖✨"; pet.classList.add('happy'); }
+    const isNapping = container && container.classList.contains('napping');
+    if (petHunger <= 0) { petStatus.textContent = "小恐龍已經斷網了 (GameOver) 👻"; pet.classList.add('dead'); pet.classList.remove('scared'); }
+    else if (isNapping) { petStatus.textContent = "Zzz... 午睡中 💤"; }
+    else if (petHunger > 80) { petStatus.textContent = "小恐龍跑得很開心！🦖✨"; pet.classList.add('happy'); }
     else if (petHunger > 40) { petStatus.textContent = "小恐龍肚子有點空空的... 🌵"; }
-    else if (petHunger > 0) { petStatus.textContent = "小恐龍沒力氣跑了 🌫️"; pet.classList.add('hungry'); }
-    else { petStatus.textContent = "小恐龍已經斷網了 (GameOver) 👻"; pet.classList.add('dead'); }
+    else { petStatus.textContent = "小恐龍沒力氣跑了 🌫️"; pet.classList.add('hungry'); }
 }
 
 function announceTime() {
@@ -443,6 +488,7 @@ function announceTime() {
     }
     else if (curSec < wStart) msg = "還沒開工，再摸一下魚... ☕️";
     else if (curSec >= wEnd) msg = "下班啦！快點回家休息 🍻";
+    else if (curSec >= parseTimeToSec(timeConfig.lunchStart) && curSec < parseTimeToSec(timeConfig.lunchEnd)) msg = "午休時間，讓我瞇一下... 💤";
     else {
         const rem = Math.floor((wEnd - curSec) / 60);
         msg = `加油！距離下班還有 ${Math.floor(rem / 60)} 小時 ${rem % 60} 分鐘 🏠`;
@@ -521,11 +567,21 @@ function updateProgress() {
     if (isCeleb) { document.body.classList.add('celebration-mode'); if (lastCelebrationDay !== curDay) { triggerCelebration(); lastCelebrationDay = curDay; gtag('event', 'celebration_triggered', { day_of_week: curDay }); gtag('event', 'milestone_reached', { type: '100_percent' }); } }
     else { document.body.classList.remove('celebration-mode'); if (!isOff) lastCelebrationDay = -1; }
     const title = document.getElementById('title'), pBar = document.getElementById('progressBar'), pText = document.getElementById('percentText'), tLeft = document.getElementById('timeLeft'), dLabel = document.getElementById('currentDay');
-    if (title) title.textContent = statusText;
+    if (title) {
+        // h1 漸層文字會把 emoji 染成色塊，結尾 emoji 拆進 span 還原原生顏色
+        const sp = statusText.lastIndexOf(' ');
+        if (sp > -1) title.innerHTML = `${statusText.slice(0, sp)} <span class="title-emoji">${statusText.slice(sp + 1)}</span>`;
+        else title.textContent = statusText;
+    }
     if (pBar) pBar.style.width = perc + '%';
     if (pText) pText.textContent = perc.toFixed(4) + '%';
-    const tSec = Math.floor(Math.max(0, weekEnd - now) / 1000);
-    if (tLeft) tLeft.textContent = `${Math.floor(tSec / 3600)}h ${Math.floor((tSec % 3600) / 60)}m ${tSec % 60}s`;
+    const fmtSec = (s) => `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m ${s % 60}s`;
+    const isLunch = selectedDays.includes(curDay) && curSec >= lStart && curSec < lEnd;
+    const tLabel = document.getElementById('timeLeftLabel');
+    if (tLabel) tLabel.textContent = isLunch ? '午休剩餘 LUNCH LEFT' : '剩餘時間 REMAINING';
+    if (tLeft) tLeft.textContent = isLunch ? fmtSec(lEnd - curSec) : fmtSec(Math.floor(Math.max(0, weekEnd - now) / 1000));
+    const petContainer = document.getElementById('petContainer');
+    if (petContainer) petContainer.classList.toggle('napping', isLunch && petHunger > 0);
     const dayNames = ['週日 SUNDAY', '週一 MONDAY', '週二 TUESDAY', '週三 WEDNESDAY', '週四 THURSDAY', '週五 FRIDAY', '週六 SATURDAY'];
     if (dLabel) dLabel.textContent = dayNames[curDay];
     updateQuote();
@@ -538,11 +594,14 @@ function initPet() {
     fBtn.onclick = (e) => feedPet();
     pBtn.onclick = (e) => patPet();
     setInterval(() => {
-        if (Math.random() > 0.85 && !isAnnouncing && petHunger > 0) announceTime();
-        if (petHunger > 0 && Math.random() > 0.4) { 
+        const isNapping = container.classList.contains('napping');
+        if (isStormy && petHunger > 0 && !isNapping && !isAnnouncing && Math.random() > 0.8) scareDino();
+        if (Math.random() > 0.85 && !isAnnouncing && petHunger > 0 && !isNapping) announceTime();
+        if (petHunger > 0 && !isNapping && !pet.classList.contains('scared') && Math.random() > 0.4) {
             let newPos = Math.max(15, Math.min(85, petPos + (Math.random() * 40 - 20)));
-            if (newPos !== petPos) { pet.style.transform = (newPos > petPos ? "scaleX(-1)" : "scaleX(1)"); petPos = newPos; container.style.left = petPos + '%'; pet.classList.add('walking'); setTimeout(() => pet.classList.remove('walking'), 2500); }
+            if (newPos !== petPos) { pet.style.setProperty('--flip', newPos > petPos ? 'scaleX(-1)' : 'scaleX(1)'); petPos = newPos; container.style.left = petPos + '%'; pet.classList.add('walking'); setTimeout(() => pet.classList.remove('walking'), 2500); }
         }
+        else if (petHunger > 80 && !isNapping && !pet.classList.contains('scared') && Math.random() > 0.7) happyJump();
         petHunger = Math.max(0, petHunger - 0.5); updatePetStatus();
     }, 5000);
 }
