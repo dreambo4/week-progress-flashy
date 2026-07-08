@@ -4,7 +4,7 @@ const WORK_DAYS = 5;
 const TOTAL_WORK_HOURS_PER_DAY = WORK_END_HOUR - WORK_START_HOUR;
 const TOTAL_WORK_SECONDS_PER_WEEK = WORK_DAYS * TOTAL_WORK_HOURS_PER_DAY * 3600;
 
-console.log("Week Progress Script Loaded v1.5.3");
+console.log("Week Progress Script Loaded v1.6.0");
 
 const ENCOURAGEMENTS = [
     "加油！每一秒的努力都在成就更好的自己。🚀",
@@ -424,6 +424,46 @@ function happyJump() {
     setTimeout(() => pet.classList.remove('jumping'), 700);
 }
 
+let pteroFlying = false;
+
+function spawnPtero() {
+    if (pteroFlying) return;
+    pteroFlying = true;
+    const ptero = document.createElement('div');
+    ptero.className = 'ptero';
+    // 飛行高度落在恐龍頭部附近，蹲下才閃得過
+    ptero.style.bottom = (95 + Math.random() * 35) + 'px';
+    document.body.appendChild(ptero);
+    const pet = document.getElementById('pet');
+    // 追蹤水平距離：接近時蹲下、飛過後起身（跟 Chrome 遊戲一樣）
+    const duckWatcher = setInterval(() => {
+        if (!pet || petHunger <= 0) return;
+        const pr = ptero.getBoundingClientRect();
+        const dr = pet.getBoundingClientRect();
+        const dx = (pr.left + pr.width / 2) - (dr.left + dr.width / 2);
+        if (dx < -130) pet.classList.remove('ducking');
+        else if (Math.abs(dx) < 130) pet.classList.add('ducking');
+    }, 100);
+    let done = false;
+    const cleanup = () => {
+        if (done) return;
+        done = true;
+        clearInterval(duckWatcher);
+        if (pet) pet.classList.remove('ducking');
+        ptero.remove();
+        pteroFlying = false;
+    };
+    ptero.addEventListener('animationend', (e) => { if (e.animationName === 'ptero-fly') cleanup(); });
+    setTimeout(cleanup, 12000);
+}
+
+function schedulePtero() {
+    setTimeout(() => {
+        if (!document.hidden) spawnPtero();
+        schedulePtero();
+    }, 90 * 1000 + Math.random() * 150 * 1000);
+}
+
 function scareDino() {
     const pet = document.getElementById('pet'), petStatus = document.getElementById('petStatus');
     if (!pet || petHunger <= 0 || pet.classList.contains('scared')) return;
@@ -597,7 +637,7 @@ function initPet() {
         const isNapping = container.classList.contains('napping');
         if (isStormy && petHunger > 0 && !isNapping && !isAnnouncing && Math.random() > 0.8) scareDino();
         if (Math.random() > 0.85 && !isAnnouncing && petHunger > 0 && !isNapping) announceTime();
-        if (petHunger > 0 && !isNapping && !pet.classList.contains('scared') && Math.random() > 0.4) {
+        if (petHunger > 0 && !isNapping && !pet.classList.contains('scared') && !pteroFlying && Math.random() > 0.4) {
             let newPos = Math.max(15, Math.min(85, petPos + (Math.random() * 40 - 20)));
             if (newPos !== petPos) { pet.style.setProperty('--flip', newPos > petPos ? 'scaleX(-1)' : 'scaleX(1)'); petPos = newPos; container.style.left = petPos + '%'; pet.classList.add('walking'); setTimeout(() => pet.classList.remove('walking'), 2500); }
         }
@@ -640,6 +680,7 @@ function updateSolarAngle() {
 }
 
 initPet();
+schedulePtero();
 updateProgress();
 updateNotiUI();
 fetchWeather();
