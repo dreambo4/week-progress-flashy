@@ -632,7 +632,7 @@ input:checked + .slider:before { transform: translateX(14px); }
     50% { background-position: -198px -2.2px; }
 }
 
-/* ===== Dino Runner 跑酷小遊戲：小恐龍原地開跑（連點恐龍三下開啟）===== */
+/* ===== Dino Runner 跑酷小遊戲：小恐龍原地開跑（長按恐龍開啟）===== */
 #inlineGameLayer {
     position: fixed; inset: 0;
     z-index: 999997; /* 低於恐龍(999999)與翼手龍彩蛋(999998) */
@@ -656,6 +656,15 @@ input:checked + .slider:before { transform: translateX(14px); }
     font-family: monospace; font-size: 0.95rem; letter-spacing: 2px;
     color: var(--text-color); opacity: 0.85;
 }
+#inlineGameExit {
+    position: fixed; right: 20px; bottom: 190px;
+    z-index: 999998; pointer-events: auto;
+    background: transparent; cursor: pointer;
+    border: 1px solid var(--text-color); border-radius: 8px;
+    color: var(--text-color); opacity: 0.6;
+    font-size: 0.8rem; padding: 4px 10px;
+}
+#inlineGameExit:hover { opacity: 1; }
 /* 遊戲中的跑姿/蹲姿（12fps / 8fps，比照原版）*/
 .pet-dino.game-running { animation: dino-run 0.17s steps(1) infinite; }
 .pet-dino.game-ducking { width: 64.9px; animation: dino-duck-run 0.25s steps(1) infinite; }

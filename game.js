@@ -3,7 +3,7 @@
 // 物理與參數對照 Chromium 原始碼 components/neterror/resources/dino_game/
 // （trex.ts / obstacle.ts / offline.ts），時間計算採原版 deltaTime/msPerFrame，
 // 高更新率螢幕（120Hz）速度不會跑掉。
-// 進入方式：連點小恐龍三下（見 script.js）；空白鍵/↑ 跳（長按跳更高）、↓ 蹲、Esc 離開
+// 進入方式：長按小恐龍 600ms（見 script.js）；空白鍵/↑ 跳（長按跳更高）、↓ 蹲、Esc 離開
 (function () {
     // sprite.png 的 1x 原圖座標（恐龍本體 frame 由 style.css 的 game-running/game-ducking 處理，
     // 翼手龍拍翅由 .ob-ptero 的 CSS 動畫處理，這裡只需要仙人掌座標與各尺寸）
@@ -23,7 +23,7 @@
     const CLEAR_TIME = 3000, SCORE_COEFFICIENT = 0.025;
     const RESTART_DEBOUNCE = 500;
 
-    let layer = null, scoreEl = null;
+    let layer = null, scoreEl = null, exitBtn = null;
     let raf = null, lastT = 0, state = 'running';
     let obs = [], speed, dist, runTime, typeHist, hiScore;
     let dinoY, dinoVy, ducking, speedDrop, downHeld, crashedAt;
@@ -53,6 +53,13 @@
         scoreEl = document.createElement('div');
         scoreEl.id = 'inlineGameScore';
         document.body.appendChild(scoreEl);
+        // 畫面上的離開鈕：全螢幕等情境 Esc 會先被瀏覽器攔走，不能只靠鍵盤
+        exitBtn = document.createElement('button');
+        exitBtn.id = 'inlineGameExit';
+        exitBtn.textContent = '✕ 離開';
+        exitBtn.title = '離開遊戲 (Esc)';
+        exitBtn.onclick = exit;
+        document.body.appendChild(exitBtn);
         document.addEventListener('keydown', onKey);
         document.addEventListener('keyup', onKey);
         document.addEventListener('pointerdown', onPointer);
@@ -176,7 +183,7 @@
         document.body.classList.add('inline-game-crashed');
         const sc = getScore(dist);
         if (sc > hiScore) { hiScore = sc; localStorage.setItem('dino-runner-hi', String(hiScore)); }
-        if (statusEl) statusEl.textContent = 'GAME OVER！' + sc + ' 分・空白鍵再來・Esc 離開';
+        if (statusEl) statusEl.textContent = 'GAME OVER！' + sc + ' 分・空白鍵再來・✕ 離開';
         if (typeof gtag === 'function') gtag('event', 'minigame_gameover', { score: sc, hi_score: hiScore, mode: 'inline' });
     }
 
@@ -237,7 +244,7 @@
     }
 
     function onPointer(e) {
-        if (e.target.closest('.menu, .settings-btn, .modal-overlay')) return;
+        if (e.target.closest('.menu, .settings-btn, .modal-overlay, #inlineGameExit')) return;
         if (state === 'crashed') restart(); else jump();
     }
 
@@ -251,6 +258,7 @@
         obs = [];
         layer.remove(); layer = null;
         if (scoreEl) { scoreEl.remove(); scoreEl = null; }
+        if (exitBtn) { exitBtn.remove(); exitBtn = null; }
         document.body.classList.remove('inline-game-mode', 'inline-game-crashed');
         pet.classList.remove('game-running', 'game-ducking', 'dead');
         pet.style.transform = '';

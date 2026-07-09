@@ -633,19 +633,24 @@ function initPet() {
     container.style.left = petPos + '%';
     fBtn.onclick = (e) => feedPet();
     pBtn.onclick = (e) => patPet();
-    // 點恐龍本體＝拍拍；800ms 內連點三下＝開啟 Dino Runner 跑酷小遊戲
-    let petClicks = [];
+    // 點恐龍本體＝拍拍；長按 600ms＝開啟 Dino Runner 跑酷小遊戲
+    let pressTimer = null, longPressed = false;
+    const cancelPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
+    pet.addEventListener('pointerdown', () => {
+        if (window.dinoGameActive) return;
+        longPressed = false;
+        pressTimer = setTimeout(() => {
+            pressTimer = null;
+            longPressed = true;
+            if (window.DinoRunner) window.DinoRunner.open();
+        }, 600);
+    });
+    pet.addEventListener('pointerup', cancelPress);
+    pet.addEventListener('pointerleave', cancelPress);
     pet.onclick = () => {
         if (window.dinoGameActive) return; // 遊戲中，點擊交給遊戲當跳躍
-        const now = Date.now();
-        petClicks = petClicks.filter(t => now - t < 800);
-        petClicks.push(now);
-        if (petClicks.length >= 3 && window.DinoRunner) {
-            petClicks = [];
-            window.DinoRunner.open();
-        } else {
-            patPet();
-        }
+        if (longPressed) { longPressed = false; return; } // 長按已觸發，吞掉這次 click
+        patPet();
     };
     setInterval(() => {
         if (window.dinoGameActive) return; // 頁面版遊戲中：暫停走動/報時/飢餓
