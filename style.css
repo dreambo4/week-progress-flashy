@@ -555,7 +555,7 @@ input:checked + .slider:before { transform: translateX(14px); }
     background-image: url('sprite.png');
     background-size: 1356.3px 74.8px; /* 原圖 1233x68 放大 1.1 倍，position 需同步 x1.1 */
     background-repeat: no-repeat; background-position: -44px -2.2px;
-    transform: var(--flip, none);
+    transform: var(--flip, scaleX(1));
     transition: transform 0.3s; cursor: pointer !important;
     user-select: none; image-rendering: pixelated;
     filter: drop-shadow(0 0 2px #fff); margin-bottom: 12px;
@@ -568,9 +568,9 @@ input:checked + .slider:before { transform: translateX(14px); }
 /* 開心小跳：transform 帶上 --flip 保留恐龍面向 */
 .pet-dino.jumping { animation: dino-jump 0.7s ease; }
 @keyframes dino-jump {
-    0%, 55%, 100% { transform: var(--flip, none) translateY(0); }
-    25% { transform: var(--flip, none) translateY(-18px); }
-    80% { transform: var(--flip, none) translateY(-10px); }
+    0%, 55%, 100% { transform: var(--flip, scaleX(1)) translateY(0); }
+    25% { transform: var(--flip, scaleX(1)) translateY(-18px); }
+    80% { transform: var(--flip, scaleX(1)) translateY(-10px); }
 }
 
 /* 蹲下 frame（原圖 x=1112 寬 59，乘 1.1）：拍拍/暴雨/午睡共用 */
@@ -583,9 +583,9 @@ input:checked + .slider:before { transform: translateX(14px); }
 /* 暴雨害怕發抖（偶發彩蛋，約 5 秒） */
 .pet-dino.scared { animation: dino-shake 0.2s infinite; }
 @keyframes dino-shake {
-    0%, 100% { transform: var(--flip, none) translateX(0); }
-    25% { transform: var(--flip, none) translateX(-2px); }
-    75% { transform: var(--flip, none) translateX(2px); }
+    0%, 100% { transform: var(--flip, scaleX(1)) translateX(0); }
+    25% { transform: var(--flip, scaleX(1)) translateX(-2px); }
+    75% { transform: var(--flip, scaleX(1)) translateX(2px); }
 }
 
 /* 午睡 Zzz 泡泡 */
@@ -630,6 +630,30 @@ input:checked + .slider:before { transform: translateX(14px); }
 @keyframes ptero-flap {
     0%, 100% { background-position: -147.4px -2.2px; }
     50% { background-position: -198px -2.2px; }
+}
+
+/* 仙人掌彩蛋：偶爾滑過地面，小恐龍跳過去（尺寸/座標由 JS 依大小款式設定） */
+.easter-cactus {
+    position: fixed;
+    right: 0;
+    background-image: url('sprite.png');
+    background-size: 1356.3px 74.8px;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 0 2px #fff);
+    z-index: 999998;
+    pointer-events: none;
+    animation: ptero-fly 5s linear forwards; /* 與翼手龍同 keyframes；等效遊戲起始速度，跳單顆剛好 */
+}
+
+/* 躍過仙人掌的單次跳躍：精確拋物線，與遊戲內物理同款
+   （初速 -10.6、重力 0.6/frame → 高 ~100px、滯空 ~0.6s；
+   cubic-bezier(1/3, 2/3, 2/3, 1) 是二次減速曲線的精確表示，下降段取鏡像） */
+.pet-dino.hopping { animation: dino-hop 0.6s linear; }
+@keyframes dino-hop {
+    0% { transform: var(--flip, scaleX(1)) translateY(0); animation-timing-function: cubic-bezier(0.333, 0.667, 0.667, 1); }
+    50% { transform: var(--flip, scaleX(1)) translateY(-100px); animation-timing-function: cubic-bezier(0.333, 0, 0.667, 0.333); }
+    100% { transform: var(--flip, scaleX(1)) translateY(0); }
 }
 
 /* ===== Dino Runner 跑酷小遊戲：小恐龍原地開跑（長按恐龍開啟）===== */

@@ -4,7 +4,7 @@ const WORK_DAYS = 5;
 const TOTAL_WORK_HOURS_PER_DAY = WORK_END_HOUR - WORK_START_HOUR;
 const TOTAL_WORK_SECONDS_PER_WEEK = WORK_DAYS * TOTAL_WORK_HOURS_PER_DAY * 3600;
 
-console.log("Week Progress Script Loaded v1.7.0");
+console.log("Week Progress Script Loaded v1.8.0");
 
 const ENCOURAGEMENTS = [
     "加油！每一秒的努力都在成就更好的自己。🚀",
@@ -457,10 +457,63 @@ function spawnPtero() {
     setTimeout(cleanup, 12000);
 }
 
-function schedulePtero() {
+let cactusActive = false;
+
+function spawnCactus() {
+    if (cactusActive || pteroFlying || window.dinoGameActive) return;
+    const pet = document.getElementById('pet');
+    const container = document.getElementById('petContainer');
+    if (!pet || petHunger <= 0) return;
+    if (container && container.classList.contains('napping')) return; // 睡著跳不了，跳過這輪
+    cactusActive = true;
+    // 單顆仙人掌（1x 座標：小 x=228 17x35 / 大 x=332 25x50，各 6 款，乘 1.1 縮放）
+    // 彩蛋走遊戲起始速度，滯空只夠跳單顆；連叢是遊戲中後段高速時才有的東西
+    const large = Math.random() > 0.5;
+    const unitW = large ? 25 : 17, unitH = large ? 50 : 35, baseX = large ? 332 : 228;
+    const variant = Math.floor(Math.random() * 6);
+    const cactus = document.createElement('div');
+    cactus.className = 'easter-cactus';
+    cactus.style.width = (unitW * 1.1) + 'px';
+    cactus.style.height = (unitH * 1.1) + 'px';
+    cactus.style.backgroundPosition = (-(baseX + variant * unitW) * 1.1) + 'px -2.2px';
+    // 貼齊恐龍腳底的地平線
+    cactus.style.bottom = Math.max(0, window.innerHeight - pet.getBoundingClientRect().bottom) + 'px';
+    document.body.appendChild(cactus);
+    // 追蹤水平距離：仙人掌逼近時起跳躍過（跟 Chrome 遊戲一樣）
+    // 停住走路滑行（left 有 3s transition，滑行中相對速度會讓起跳時機失準）
+    if (container) container.style.left = getComputedStyle(container).left;
+    // 用「仙人掌前緣 vs 恐龍前緣」的間距判斷起跳（中心距離會低估寬叢的逼近），
+    // 距離隨螢幕寬換算：仙人掌 5 秒橫越 (寬+120)px，拋物線跳躍約 0.1 秒升到安全高度
+    const cactusSpeed = (window.innerWidth + 120) / 5; // px/s
+    const triggerGap = cactusSpeed * 0.15 + 15;
+    let hopped = false; // 一朵仙人掌只跳一次，避免落地後誤觸發第二跳
+    const hopWatcher = setInterval(() => {
+        if (hopped || window.dinoGameActive || petHunger <= 0) return;
+        const cr = cactus.getBoundingClientRect();
+        const dr = pet.getBoundingClientRect();
+        const gap = cr.left - dr.right;
+        if (gap > -10 && gap < triggerGap) {
+            hopped = true;
+            pet.classList.add('hopping');
+            setTimeout(() => pet.classList.remove('hopping'), 650);
+        }
+    }, 50);
+    let done = false;
+    const cleanup = () => {
+        if (done) return;
+        done = true;
+        clearInterval(hopWatcher);
+        cactus.remove();
+        cactusActive = false;
+    };
+    cactus.addEventListener('animationend', cleanup);
+    setTimeout(cleanup, 12000);
+}
+
+function scheduleEasterEgg() {
     setTimeout(() => {
-        if (!document.hidden) spawnPtero();
-        schedulePtero();
+        if (!document.hidden) (Math.random() < 0.5 ? spawnPtero : spawnCactus)();
+        scheduleEasterEgg();
     }, 90 * 1000 + Math.random() * 150 * 1000);
 }
 
@@ -657,7 +710,7 @@ function initPet() {
         const isNapping = container.classList.contains('napping');
         if (isStormy && petHunger > 0 && !isNapping && !isAnnouncing && Math.random() > 0.8) scareDino();
         if (Math.random() > 0.85 && !isAnnouncing && petHunger > 0 && !isNapping) announceTime();
-        if (petHunger > 0 && !isNapping && !pet.classList.contains('scared') && !pteroFlying && Math.random() > 0.4) {
+        if (petHunger > 0 && !isNapping && !pet.classList.contains('scared') && !pteroFlying && !cactusActive && Math.random() > 0.4) {
             let newPos = Math.max(15, Math.min(85, petPos + (Math.random() * 40 - 20)));
             if (newPos !== petPos) { pet.style.setProperty('--flip', newPos > petPos ? 'scaleX(-1)' : 'scaleX(1)'); petPos = newPos; container.style.left = petPos + '%'; pet.classList.add('walking'); setTimeout(() => pet.classList.remove('walking'), 2500); }
         }
@@ -700,7 +753,7 @@ function updateSolarAngle() {
 }
 
 initPet();
-schedulePtero();
+scheduleEasterEgg();
 updateProgress();
 updateNotiUI();
 fetchWeather();

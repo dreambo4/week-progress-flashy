@@ -46,7 +46,7 @@
         container.style.transition = 'left 0.6s ease';
         container.style.left = '12%';
         pet.classList.remove('walking', 'ducking', 'scared', 'jumping', 'happy', 'hungry', 'dead');
-        pet.style.setProperty('--flip', 'none');
+        pet.style.setProperty('--flip', 'scaleX(1)'); // 面向右；不能用 none，keyframes 組合 none+translate 是非法值
         layer = document.createElement('div');
         layer.id = 'inlineGameLayer';
         document.body.appendChild(layer);
