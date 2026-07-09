@@ -4,7 +4,7 @@ const WORK_DAYS = 5;
 const TOTAL_WORK_HOURS_PER_DAY = WORK_END_HOUR - WORK_START_HOUR;
 const TOTAL_WORK_SECONDS_PER_WEEK = WORK_DAYS * TOTAL_WORK_HOURS_PER_DAY * 3600;
 
-console.log("Week Progress Script Loaded v1.8.0");
+console.log("Week Progress Script Loaded v1.8.1");
 
 const ENCOURAGEMENTS = [
     "加油！每一秒的努力都在成就更好的自己。🚀",
@@ -38,6 +38,11 @@ const LUNCH_QUOTES = [
     "吃什麼不重要，重要的是不在座位上吃。🚶",
     "小恐龍午睡中，請勿打擾。💤",
     "半天過去了，你已經很棒了。✨"
+];
+
+// 小恐龍偶爾冒出的小提示（未來擴充直接往陣列加）
+const DINO_TIPS = [
+    "上班坐一整天了，『長按』我動一動 🦖"
 ];
 
 let lastQuoteIndex = -1;
@@ -569,6 +574,14 @@ function updatePetStatus() {
     else { petStatus.textContent = "小恐龍沒力氣跑了 🌫️"; pet.classList.add('hungry'); }
 }
 
+function announceTip() {
+    const petStatus = document.getElementById('petStatus');
+    if (!petStatus) return;
+    isAnnouncing = true;
+    petStatus.textContent = DINO_TIPS[Math.floor(Math.random() * DINO_TIPS.length)];
+    setTimeout(() => { isAnnouncing = false; updatePetStatus(); }, 6000);
+}
+
 function announceTime() {
     const petStatus = document.getElementById('petStatus');
     if (!petStatus) return;
@@ -710,6 +723,7 @@ function initPet() {
         const isNapping = container.classList.contains('napping');
         if (isStormy && petHunger > 0 && !isNapping && !isAnnouncing && Math.random() > 0.8) scareDino();
         if (Math.random() > 0.85 && !isAnnouncing && petHunger > 0 && !isNapping) announceTime();
+        else if (Math.random() > 0.96 && !isAnnouncing && petHunger > 0 && !isNapping) announceTip();
         if (petHunger > 0 && !isNapping && !pet.classList.contains('scared') && !pteroFlying && !cactusActive && Math.random() > 0.4) {
             let newPos = Math.max(15, Math.min(85, petPos + (Math.random() * 40 - 20)));
             if (newPos !== petPos) { pet.style.setProperty('--flip', newPos > petPos ? 'scaleX(-1)' : 'scaleX(1)'); petPos = newPos; container.style.left = petPos + '%'; pet.classList.add('walking'); setTimeout(() => pet.classList.remove('walking'), 2500); }
