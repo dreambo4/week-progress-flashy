@@ -633,16 +633,16 @@ function initPet() {
     container.style.left = petPos + '%';
     fBtn.onclick = (e) => feedPet();
     pBtn.onclick = (e) => patPet();
-    // 點恐龍本體＝拍拍；800ms 內連點三下＝開啟 Dino Runner 小遊戲（先跳版本選單）
+    // 點恐龍本體＝拍拍；800ms 內連點三下＝開啟 Dino Runner 跑酷小遊戲
     let petClicks = [];
     pet.onclick = () => {
-        if (window.dinoGameActive) return; // 頁面版遊戲中，點擊交給遊戲當跳躍
+        if (window.dinoGameActive) return; // 遊戲中，點擊交給遊戲當跳躍
         const now = Date.now();
         petClicks = petClicks.filter(t => now - t < 800);
         petClicks.push(now);
         if (petClicks.length >= 3 && window.DinoRunner) {
             petClicks = [];
-            window.DinoRunner.choose();
+            window.DinoRunner.open();
         } else {
             patPet();
         }

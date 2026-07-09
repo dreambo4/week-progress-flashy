@@ -632,45 +632,7 @@ input:checked + .slider:before { transform: translateX(14px); }
     50% { background-position: -198px -2.2px; }
 }
 
-/* ===== Dino Runner 摸魚小遊戲（連點恐龍三下開啟）===== */
-.game-overlay {
-    position: fixed; inset: 0; z-index: 1000000;
-    background: rgba(0, 0, 0, 0.75);
-    display: flex; align-items: center; justify-content: center;
-}
-.game-box {
-    background: #f7f7f7; border-radius: 14px;
-    padding: 28px 20px 12px; position: relative;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-.game-box canvas {
-    display: block;
-    width: min(88vw, 900px);
-    image-rendering: pixelated;
-}
-.game-close {
-    position: absolute; top: 6px; right: 12px;
-    background: none; border: none;
-    font-size: 1.5rem; line-height: 1;
-    color: #535353; cursor: pointer;
-}
-.game-hint {
-    text-align: center; font-size: 0.7rem; color: #999;
-    margin-top: 8px; font-family: monospace;
-}
-
-/* 版本選擇小視窗 */
-.game-choice { padding: 26px 30px 20px; text-align: center; }
-.game-choice-title { font-weight: 700; margin-bottom: 16px; color: #333; }
-.game-choice-btn {
-    display: block; width: 240px; margin: 10px auto; padding: 12px;
-    border: 2px solid #535353; border-radius: 10px; background: #fff;
-    color: #333; font-size: 0.95rem; cursor: pointer;
-    transition: background 0.15s;
-}
-.game-choice-btn:hover { background: #e8e8e8; }
-
-/* ===== 頁面版跑酷：小恐龍原地開跑 ===== */
+/* ===== Dino Runner 跑酷小遊戲：小恐龍原地開跑（連點恐龍三下開啟）===== */
 #inlineGameLayer {
     position: fixed; inset: 0;
     z-index: 999997; /* 低於恐龍(999999)與翼手龍彩蛋(999998) */
