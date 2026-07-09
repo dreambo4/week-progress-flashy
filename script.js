@@ -4,7 +4,7 @@ const WORK_DAYS = 5;
 const TOTAL_WORK_HOURS_PER_DAY = WORK_END_HOUR - WORK_START_HOUR;
 const TOTAL_WORK_SECONDS_PER_WEEK = WORK_DAYS * TOTAL_WORK_HOURS_PER_DAY * 3600;
 
-console.log("Week Progress Script Loaded v1.6.0");
+console.log("Week Progress Script Loaded v1.7.0");
 
 const ENCOURAGEMENTS = [
     "加油！每一秒的努力都在成就更好的自己。🚀",
@@ -427,7 +427,7 @@ function happyJump() {
 let pteroFlying = false;
 
 function spawnPtero() {
-    if (pteroFlying) return;
+    if (pteroFlying || window.dinoGameActive) return;
     pteroFlying = true;
     const ptero = document.createElement('div');
     ptero.className = 'ptero';
@@ -437,7 +437,7 @@ function spawnPtero() {
     const pet = document.getElementById('pet');
     // 追蹤水平距離：接近時蹲下、飛過後起身（跟 Chrome 遊戲一樣）
     const duckWatcher = setInterval(() => {
-        if (!pet || petHunger <= 0) return;
+        if (!pet || petHunger <= 0 || window.dinoGameActive) return;
         const pr = ptero.getBoundingClientRect();
         const dr = pet.getBoundingClientRect();
         const dx = (pr.left + pr.width / 2) - (dr.left + dr.width / 2);
@@ -621,7 +621,7 @@ function updateProgress() {
     if (tLabel) tLabel.textContent = isLunch ? '午休剩餘 LUNCH LEFT' : '剩餘時間 REMAINING';
     if (tLeft) tLeft.textContent = isLunch ? fmtSec(lEnd - curSec) : fmtSec(Math.floor(Math.max(0, weekEnd - now) / 1000));
     const petContainer = document.getElementById('petContainer');
-    if (petContainer) petContainer.classList.toggle('napping', isLunch && petHunger > 0);
+    if (petContainer) petContainer.classList.toggle('napping', isLunch && petHunger > 0 && !window.dinoGameActive);
     const dayNames = ['週日 SUNDAY', '週一 MONDAY', '週二 TUESDAY', '週三 WEDNESDAY', '週四 THURSDAY', '週五 FRIDAY', '週六 SATURDAY'];
     if (dLabel) dLabel.textContent = dayNames[curDay];
     updateQuote();
@@ -633,7 +633,22 @@ function initPet() {
     container.style.left = petPos + '%';
     fBtn.onclick = (e) => feedPet();
     pBtn.onclick = (e) => patPet();
+    // 點恐龍本體＝拍拍；800ms 內連點三下＝開啟 Dino Runner 小遊戲（先跳版本選單）
+    let petClicks = [];
+    pet.onclick = () => {
+        if (window.dinoGameActive) return; // 頁面版遊戲中，點擊交給遊戲當跳躍
+        const now = Date.now();
+        petClicks = petClicks.filter(t => now - t < 800);
+        petClicks.push(now);
+        if (petClicks.length >= 3 && window.DinoRunner) {
+            petClicks = [];
+            window.DinoRunner.choose();
+        } else {
+            patPet();
+        }
+    };
     setInterval(() => {
+        if (window.dinoGameActive) return; // 頁面版遊戲中：暫停走動/報時/飢餓
         const isNapping = container.classList.contains('napping');
         if (isStormy && petHunger > 0 && !isNapping && !isAnnouncing && Math.random() > 0.8) scareDino();
         if (Math.random() > 0.85 && !isAnnouncing && petHunger > 0 && !isNapping) announceTime();
