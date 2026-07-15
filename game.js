@@ -183,6 +183,7 @@
         document.body.classList.add('inline-game-crashed');
         const sc = getScore(dist);
         if (sc > hiScore) { hiScore = sc; localStorage.setItem('dino-runner-hi', String(hiScore)); }
+        if (window.Leaderboard) window.Leaderboard.submitScore(sc); // 雲端排行榜（未綁定時內部直接 return）
         if (statusEl) statusEl.textContent = 'GAME OVER！' + sc + ' 分・空白鍵再來・✕ 離開';
         if (typeof gtag === 'function') gtag('event', 'minigame_gameover', { score: sc, hi_score: hiScore, mode: 'inline' });
     }

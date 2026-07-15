@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 跑酷排行榜（spec: .claude/specs/20260709_google登入與排行榜.md）
+    match /scores/{uid} {
+      allow read: if true;  // 排行榜公開讀
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasAll(['name','photo','allTimeHi','weekHi','weekId','updatedAt'])
+        && request.resource.data.keys().hasOnly(['name','photo','allTimeHi','weekHi','weekId','updatedAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() < 50
+        && request.resource.data.name.matches('[^<>]*')            // 防 XSS：暱稱禁角括號
+        && request.resource.data.photo is string
+        && request.resource.data.photo.size() < 500
+        && (request.resource.data.photo == ''
+            || request.resource.data.photo.matches('https://[^<>"\\s]*'))  // 防 XSS：頭像僅限 https URL
+        && request.resource.data.allTimeHi is int
+        && request.resource.data.allTimeHi >= 0
+        && request.resource.data.allTimeHi < 100000
+        && request.resource.data.weekHi is int
+        && request.resource.data.weekHi >= 0
+        && request.resource.data.weekHi <= request.resource.data.allTimeHi
+        && request.resource.data.weekId is string
+        && request.resource.data.weekId.size() == 10
+        && request.resource.data.updatedAt == request.time
+        // 歷史最高只能往上走
+        && (resource == null || request.resource.data.allTimeHi >= resource.data.allTimeHi)
+        // 同一週內 weekHi 不可下修；換週才允許重設
+        && (resource == null
+            || request.resource.data.weekId != resource.data.weekId
+            || request.resource.data.weekHi >= resource.data.weekHi);
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
