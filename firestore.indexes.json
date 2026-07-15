@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "scores",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "weekId", "order": "ASCENDING" },
+        { "fieldPath": "weekHi", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
