@@ -125,6 +125,23 @@ function saveTimeConfig() {
     gtag('event', 'time_config_save', { work_start: timeConfig.workStart, work_end: timeConfig.workEnd, lunch_start: timeConfig.lunchStart, lunch_end: timeConfig.lunchEnd });
 }
 
+// 由台灣行事曆套用本週上班日（calendar-ui.js 呼叫）
+function applyWorkdaysFromCalendar(workdays) {
+    if (!Array.isArray(workdays)) return;
+    timeConfig.workdays = workdays.length > 0 ? workdays : [1, 2, 3, 4, 5];
+    // 同步鎖定本週 weekId，避免 updateProgress 的每週自動重置把套用結果蓋回 [1..5]
+    const now = new Date(), curDay = now.getDay();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + (curDay === 0 ? -6 : 1 - curDay));
+    monday.setHours(0, 0, 0, 0);
+    timeConfig.weekId = monday.getTime();
+    localStorage.setItem('week-progress-time-config', JSON.stringify(timeConfig));
+    updateProgress();
+    if (typeof confetti === 'function') {
+        confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
+    }
+}
+
 function parseTimeToSec(timeStr) {
     const [h, m] = timeStr.split(':').map(Number);
     return h * 3600 + m * 60;

@@ -14,7 +14,7 @@
       gtag('config', 'G-FDTCZB7C25');
     </script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22none%22 stroke=%22%2300f2fe%22 stroke-width=%2210%22 stroke-dasharray=%22210 70%22 stroke-linecap=%22round%22><animateTransform attributeName=%22transform%22 type=%22rotate%22 from=%220 50 50%22 to=%22360 50 50%22 dur=%2210s%22 repeatCount=%22indefinite%22/></circle><path d=%22M30 50 L45 65 L70 35%22 fill=%22none%22 stroke=%22%234facfe%22 stroke-width=%228%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>">
-    <link rel="stylesheet" href="style.css?t=202607151004">
+    <link rel="stylesheet" href="style.css?t=202607151344">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 </head>
@@ -65,6 +65,14 @@
             <span>天氣變化提醒</span>
             <label class="switch"><input type="checkbox" id="notiWeatherAlert" onchange="updateNotiConfig()"><span class="slider"></span></label>
         </div>
+
+        <hr style="opacity: 0.1; margin: 5px 0;">
+        <div class="menu-section-title">行事曆設定</div>
+        <div class="menu-item-switch">
+            <span>台灣連假倒數</span>
+            <label class="switch"><input type="checkbox" id="calEnabled" onchange="TWCalendarUI.toggleEnabled()"><span class="slider"></span></label>
+        </div>
+        <div class="menu-item" id="calRefreshMenu" onclick="TWCalendarUI.refresh()">🔄 重新查詢連假</div>
 
         <hr style="opacity: 0.1; margin: 5px 0;">
         <div class="menu-section-title">天氣設定</div>
@@ -184,6 +192,46 @@
                 </div>
             </div>
         </div>
+
+        <!-- 連假倒數橫條（吃豆豆），資料齊全才由 JS 顯示 -->
+        <div class="pac-bar" id="pacBar" style="display: none;" onclick="TWCalendarUI.openList()" title="點擊查看一年內連假與補班">
+            <div class="pac-track" id="pacTrack"></div>
+            <div class="pac-man" id="pacMan"><div class="pac-body"></div></div>
+            <div class="pac-goal" id="pacGoal">🎉</div>
+            <div class="pac-text">
+                <div class="pac-days" id="pacDays">-- 天</div>
+                <div class="pac-name" id="pacName">距離 連假</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 連假/補班清單 Modal -->
+    <div id="calendarModal" class="modal-overlay">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>📅 一年內連假 / 補班</h3>
+                <button class="close-btn" onclick="TWCalendarUI.closeList()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <ul id="calList" class="cal-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 當週套用作息詢問 Modal -->
+    <div id="calAskModal" class="modal-overlay">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>📅 本週作息</h3>
+            </div>
+            <div class="modal-body">
+                <p id="calAskText" style="line-height: 1.6;"></p>
+            </div>
+            <div class="cal-ask-actions">
+                <button class="cal-ask-yes" onclick="TWCalendarUI.applyThisWeek()">好，幫我套用</button>
+                <button class="cal-ask-no" onclick="TWCalendarUI.dismissAsk()">不用，我自己來</button>
+            </div>
+        </div>
     </div>
 
     <!-- Leaderboard Modal -->
@@ -217,8 +265,10 @@
         </div>
     </div>
 
-    <script src="script.js?t=202607090948"></script>
+    <script src="script.js?t=202607151344"></script>
     <script src="game.js?t=202607151004"></script>
+    <script src="calendar.js?t=202607151344"></script>
+    <script src="calendar-ui.js?t=202607151344"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore-compat.js"></script>
