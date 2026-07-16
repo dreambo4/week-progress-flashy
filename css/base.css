@@ -1,0 +1,113 @@
+/* ===== 基礎版面（reset、body、容器、標題、語錄、進度條、資訊格、慶祝模式）===== */
+/* --- Global Styles --- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-main);
+    transition: background-color 0.4s, color 0.4s, border 0.4s, box-shadow 0.4s;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    padding: 20px;
+}
+
+
+.scanlines {
+    pointer-events: none !important;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+    z-index: 100;
+    display: none;
+}
+[data-theme="terminal"] .scanlines { display: block !important; }
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    padding: clamp(1.5rem, 5vw, 2.5rem);
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 24px;
+    border: var(--card-border);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+
+h1 {
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 800;
+}
+
+/* h1 漸層文字會把 emoji 染成色塊，emoji 需獨立 span 還原原生顏色 */
+h1 .title-emoji { background: none; -webkit-text-fill-color: initial; }
+
+.quote-text {
+    font-size: clamp(0.85rem, 3vw, 1.1rem);
+    font-style: italic;
+    margin-bottom: 1rem;
+    opacity: 0.85;
+    min-height: 1.5em;
+    color: var(--accent-color);
+}
+
+
+/* Progress Bar */
+.percentage {
+    font-size: clamp(2.5rem, 12vw, 4.5rem); font-weight: 900;
+    margin-bottom: 1rem; font-variant-numeric: tabular-nums;
+    text-shadow: var(--glow);
+}
+
+.progress-wrapper {
+    position: relative; height: clamp(30px, 8vw, 50px);
+    background: var(--bar-bg); border-radius: 25px;
+    margin-bottom: 2rem; padding: 5px; overflow: hidden;
+    border: var(--card-border);
+}
+
+.progress-bar {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    border-radius: 20px; transition: width 0.5s cubic-bezier(0.1, 0.7, 0.1, 1);
+    position: relative; box-shadow: var(--glow);
+}
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 1.5rem; }
+.info-box { background: rgba(0, 0, 0, 0.05); padding: 1.2rem; border-radius: 16px; border: var(--card-border); }
+.info-label {
+    font-size: 0.7rem; color: var(--text-color); opacity: 0.6;
+    margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1px;
+}
+.info-value { font-size: clamp(0.9rem, 4vw, 1.2rem); font-weight: 700; }
+
+
+/* Celebration Mode */
+body.celebration-mode { animation: bg-rainbow 10s infinite linear; }
+@keyframes bg-rainbow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+/* RWD */
+@media (max-width: 480px) {
+    .container { padding: 1.5rem; }
+    .info-grid { grid-template-columns: 1fr; }
+}

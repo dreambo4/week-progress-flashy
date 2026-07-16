@@ -1,0 +1,61 @@
+/* ===== Dino Runner 跑酷小遊戲 ===== */
+/* ===== Dino Runner 跑酷小遊戲：小恐龍原地開跑（長按恐龍開啟）===== */
+#inlineGameLayer {
+    position: fixed; inset: 0;
+    z-index: 999997; /* 低於恐龍(999999)與翼手龍彩蛋(999998) */
+    pointer-events: none; overflow: hidden;
+}
+.inline-ob {
+    position: fixed; left: 0;
+    background-image: url('../sprite.png');
+    background-size: 1356.3px 74.8px;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 0 2px #fff);
+}
+.inline-ob.ob-ptero {
+    background-position: -147.4px -2.2px;
+    animation: ptero-flap 0.35s steps(1) infinite;
+}
+#inlineGameScore {
+    position: fixed; right: 20px; bottom: 155px;
+    z-index: 999997; pointer-events: none;
+    font-family: monospace; font-size: 0.95rem; letter-spacing: 2px;
+    color: var(--text-color); opacity: 0.85;
+}
+#inlineGameExit {
+    position: fixed; right: 20px; bottom: 190px;
+    z-index: 999998; pointer-events: auto;
+    background: transparent; cursor: pointer;
+    border: 1px solid var(--text-color); border-radius: 8px;
+    color: var(--text-color); opacity: 0.6;
+    font-size: 0.8rem; padding: 4px 10px;
+}
+#inlineGameExit:hover { opacity: 1; }
+
+/* 遊戲中的跑姿/蹲姿（12fps / 8fps，比照原版）*/
+.pet-dino.game-running { animation: dino-run 0.17s steps(1) infinite; }
+.pet-dino.game-ducking { width: 64.9px; animation: dino-duck-run 0.25s steps(1) infinite; }
+@keyframes dino-duck-run {
+    0% { background-position: -1223.2px -2.2px; }
+    50% { background-position: -1288.1px -2.2px; }
+}
+/* 跳躍由 JS 每 frame 更新 translateY，必須關掉 transform 過渡，否則被 0.3s 緩動拖慢 */
+.inline-game-mode .pet-dino { transition: none; }
+/* 遊戲中隱藏按鈕與泡泡（保留佔位以免恐龍位移），撞毀時泡泡顯示結算 */
+.inline-game-mode .pet-actions { visibility: hidden; }
+.inline-game-mode .pet-speech-bubble { visibility: hidden; }
+.inline-game-mode.inline-game-crashed .pet-speech-bubble { visibility: visible; }
+
+.pet-actions { display: flex; gap: 15px; justify-content: center; pointer-events: auto !important; }
+.pet-actions button {
+    background: var(--primary-color) !important; color: #000 !important;
+    border: none !important; border-radius: 10px !important;
+    padding: 10px 20px !important; cursor: pointer !important;
+    font-weight: bold !important; font-size: 1.1rem !important;
+    transition: all 0.2s !important; box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    pointer-events: auto !important;
+}
+.pet-actions button:hover { transform: scale(1.1) !important; filter: brightness(1.2) !important; }
+.pet-actions button:active { transform: scale(0.9) !important; }
+

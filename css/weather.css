@@ -1,0 +1,262 @@
+/* ===== 天氣（動態背景特效、天氣資訊區塊、天氣預報 Modal）===== */
+/* Weather Background Effects */
+.weather-bg-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* Sunny Effect */
+.sun-container {
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 180px; height: 180px;
+    filter: blur(10px);
+    opacity: 0.85;
+    pointer-events: none;
+}
+.sun-glow {
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255, 230, 100, 0.5) 0%, rgba(255, 180, 50, 0.15) 50%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(15px);
+    animation: sun-pulse 8s infinite alternate ease-in-out;
+}
+.sun-rays {
+    position: absolute;
+    top: 20px; right: 20px;
+    width: 140px; height: 140px;
+    background: rgba(255, 225, 100, 0.4);
+    animation: sun-spin 12s linear infinite;
+}
+.sun-rays::before, .sun-rays::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(255, 225, 100, 0.4);
+}
+.sun-rays::before { transform: rotate(30deg); }
+.sun-rays::after { transform: rotate(60deg); }
+.sun-core {
+    position: absolute;
+    top: 55px; right: 55px;
+    width: 70px; height: 70px;
+    background: radial-gradient(circle, rgba(255,250,210,0.95) 0%, rgba(255,225,100,0.8) 50%, rgba(255,180,50,0.5) 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(255, 225, 100, 0.6), 0 0 40px rgba(255, 180, 50, 0.4);
+}
+@keyframes sun-pulse {
+    from { transform: scale(1); opacity: 0.7; }
+    to { transform: scale(1.1); opacity: 0.9; }
+}
+@keyframes sun-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(180deg); }
+}
+
+/* Rain Effect */
+.rain-drop {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.3);
+    width: 2px; height: 15px;
+    top: -50px;
+    animation: rain-fall linear infinite;
+}
+@keyframes rain-fall {
+    to { transform: translateY(100vh); }
+}
+
+/* Storm Effect */
+.storm-drop {
+    background-color: rgba(255, 255, 255, 0.25);
+    width: 3px; height: 30px;
+}
+.lightning-flash {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: white;
+    opacity: 0;
+    animation: lightning-strike 7s infinite;
+}
+@keyframes lightning-strike {
+    0%, 93%, 100% { opacity: 0; }
+    94% { opacity: 0.1; }
+    95% { opacity: 0; }
+    96% { opacity: 0.2; }
+    97% { opacity: 0; }
+}
+
+/* Cloud Effect */
+.cloud {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    filter: blur(12px);
+    opacity: 0;
+    animation: cloud-drift linear infinite, cloud-fade 4s ease-out forwards;
+}
+.cloud::before,
+.cloud::after {
+    content: '';
+    position: absolute;
+    background: inherit;
+    border-radius: 50%;
+}
+.cloud::before {
+    width: var(--b1-w, 60%);
+    height: var(--b1-h, 80%);
+    top: var(--b1-top, -40%);
+    left: var(--b1-left, 15%);
+}
+.cloud::after {
+    width: var(--b2-w, 45%);
+    height: var(--b2-h, 65%);
+    top: var(--b2-top, -25%);
+    right: var(--b2-right, 15%);
+}
+@keyframes cloud-drift {
+    0%   { transform: translateX(0) translateY(0); }
+    25%  { transform: translateX(25vw) translateY(-8px); }
+    50%  { transform: translateX(50vw) translateY(4px); }
+    75%  { transform: translateX(75vw) translateY(-6px); }
+    100% { transform: translateX(calc(100vw + 200%)) translateY(0); }
+}
+@keyframes cloud-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+
+/* Weather Dashboard */
+.weather-dashboard {
+    margin-top: 1.5rem;
+    padding: 1.2rem 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    border: var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    animation: fade-in 0.5s ease-out;
+}
+
+@keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.weather-main {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.weather-emoji {
+    font-size: clamp(2rem, 8vw, 2.8rem);
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+}
+
+.weather-temp {
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.weather-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: right;
+}
+
+.weather-detail-item {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+}
+
+.detail-label {
+    opacity: 0.5;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+/* 天氣區塊可點擊（開啟天氣預報 Modal） */
+.weather-dashboard { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.weather-dashboard:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
+
+/* 天氣預報 Modal */
+.wf-body { max-height: min(62vh, 540px); overflow-y: auto; }
+.wf-location {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+.wf-hourly {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+}
+.wf-hour {
+    flex: 0 0 auto;
+    min-width: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 6px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: var(--card-border);
+    font-size: 0.7rem;
+}
+.wf-hour.now {
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+}
+.wf-hour-time { opacity: 0.6; }
+.wf-hour-emoji { font-size: 1.2rem; }
+.wf-hour-temp { font-weight: 700; }
+.wf-hour-pop { opacity: 0.75; }
+
+.wf-daily { list-style: none; padding: 0; margin: 0; }
+.wf-day {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px 30px 60px 76px;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 4px;
+    font-size: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.wf-day:last-child { border-bottom: none; }
+.wf-day.today .wf-day-name { color: var(--primary-color); font-weight: 700; }
+.wf-day-date { opacity: 0.5; font-size: 0.7rem; }
+.wf-day-emoji { text-align: center; }
+.wf-day-pop { opacity: 0.75; font-size: 0.75rem; }
+.wf-day-temp { text-align: right; font-weight: 700; white-space: nowrap; }
+.wf-temp-lo { opacity: 0.55; font-weight: 400; }
+
+/* RWD */
+@media (max-width: 480px) {
+    .weather-dashboard {
+        flex-direction: row;
+        padding: 1rem;
+        gap: 10px;
+    }
+    .weather-details {
+        gap: 4px;
+    }
+}

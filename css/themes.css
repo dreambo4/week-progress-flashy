@@ -1,0 +1,115 @@
+/* ===== 主題定義（data-theme 變數色盤）===== */
+/* --- Theme Definitions --- */
+
+:root {
+    /* 1. Neon Night (Default) */
+    --bg-color: #0f172a;
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --primary-color: #00f2fe;
+    --secondary-color: #4facfe;
+    --text-color: #ffffff;
+    --accent-color: #00f2fe;
+    --font-main: 'Segoe UI', Roboto, system-ui, sans-serif;
+    --glow: 0 0 15px rgba(0, 242, 254, 0.5);
+    --bar-bg: rgba(0, 0, 0, 0.3);
+    --card-border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="flow"] {
+    /* 2. Gradient Flow */
+    --bg-color: #f0f4f8;
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --primary-color: #ff0080;
+    --secondary-color: #7928ca;
+    --text-color: #1e293b;
+    --accent-color: #7928ca;
+    --font-main: 'Segoe UI', sans-serif;
+    --glow: 0 10px 20px rgba(121, 40, 202, 0.2);
+    --bar-bg: #e2e8f0;
+    --card-border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="terminal"] {
+    /* 3. Cyber Terminal */
+    --bg-color: #0a0a0a;
+    --card-bg: #000000;
+    --primary-color: #00ff41;
+    --secondary-color: #008f11;
+    --text-color: #00ff41;
+    --accent-color: #00ff41;
+    --font-main: 'Courier New', Courier, monospace;
+    --glow: 0 0 10px rgba(0, 255, 65, 0.7);
+    --bar-bg: #111;
+    --card-border: 1px solid #00ff41;
+}
+
+[data-theme="sunset"] {
+    /* 4. Sunset Horizon */
+    --bg-color: #2d1b2d;
+    --card-bg: rgba(45, 27, 45, 0.8);
+    --primary-color: #ff512f;
+    --secondary-color: #dd2476;
+    --text-color: #ffffff;
+    --accent-color: #ff512f;
+    --font-main: 'Segoe UI', sans-serif;
+    --glow: 0 0 20px rgba(255, 81, 47, 0.4);
+    --bar-bg: rgba(0,0,0,0.4);
+    --card-border: 1px solid rgba(255, 81, 47, 0.2);
+}
+
+[data-theme="forest"] {
+    /* 5. Deep Forest */
+    --bg-color: #061612;
+    --card-bg: rgba(10, 31, 26, 0.8);
+    --primary-color: #00b09b;
+    --secondary-color: #96c93d;
+    --text-color: #e0f2f1;
+    --accent-color: #00b09b;
+    --font-main: 'Georgia', serif;
+    --glow: 0 0 15px rgba(0, 176, 155, 0.3);
+    --bar-bg: rgba(0,0,0,0.5);
+    --card-border: 1px solid rgba(0, 176, 155, 0.1);
+}
+
+[data-theme="midnight"] {
+    /* 6. Midnight Purple */
+    --bg-color: #1a0b2e;
+    --card-bg: rgba(43, 19, 77, 0.7);
+    --primary-color: #9d50bb;
+    --secondary-color: #6e48aa;
+    --text-color: #f3e5f5;
+    --accent-color: #9d50bb;
+    --font-main: 'Segoe UI', sans-serif;
+    --glow: 0 0 20px rgba(157, 80, 187, 0.5);
+    --bar-bg: rgba(0,0,0,0.4);
+    --card-border: 1px solid rgba(157, 80, 187, 0.2);
+}
+
+[data-theme="minimal"] {
+    /* 7. Minimalist Light */
+    --bg-color: #ffffff;
+    --card-bg: #f8fafc;
+    --primary-color: #334155;
+    --secondary-color: #64748b;
+    --text-color: #0f172a;
+    --accent-color: #334155;
+    --font-main: 'Inter', system-ui, sans-serif;
+    --glow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --bar-bg: #e2e8f0;
+    --card-border: 1px solid #e2e8f0;
+}
+
+[data-theme="lava"] {
+    /* 8. Lava Fire */
+    --bg-color: #1a0505;
+    --card-bg: rgba(30, 0, 0, 0.9);
+    --primary-color: #f00000;
+    --secondary-color: #dc281e;
+    --text-color: #ffcccc;
+    --accent-color: #f00000;
+    --font-main: 'Impact', Charcoal, sans-serif;
+    --glow: 0 0 25px rgba(240, 0, 0, 0.6);
+    --bar-bg: #300;
+    --card-border: 1px solid #f00000;
+}
+

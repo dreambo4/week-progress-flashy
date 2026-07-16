@@ -1,0 +1,101 @@
+/* ===== 設定按鈕與側邊選單（含開關樣式）===== */
+/* Side Menu Styles */
+.settings-btn {
+    position: fixed;
+    top: 20px; right: 20px;
+    width: 44px; height: 44px;
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 1000;
+    color: var(--text-color);
+}
+
+.settings-btn svg { width: 24px; height: 24px; transition: transform 0.5s; }
+.settings-btn:hover svg { transform: rotate(90deg); }
+
+.menu {
+    position: fixed;
+    top: 75px; right: 20px;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: var(--card-border);
+    border-radius: 16px;
+    padding: 10px;
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 1000;
+    width: 240px;
+    max-height: calc(100vh - 265px); /* top 75px + 恐龍區 180px + 間距 10px，底端停在恐龍活動區之上 */
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) transparent;
+}
+
+.menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.menu::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+
+.menu.active { display: flex; }
+
+.menu-brand {
+    font-size: 1.1rem; font-weight: 800; text-align: center;
+    color: var(--primary-color); padding: 8px 15px 6px;
+    letter-spacing: 0.5px;
+}
+
+.menu-section-title {
+    font-size: 0.7rem; color: var(--text-color); opacity: 0.5;
+    padding: 5px 15px; text-transform: uppercase; letter-spacing: 1px;
+}
+
+.menu-item {
+    padding: 10px 15px; border-radius: 10px; cursor: pointer;
+    font-size: 0.9rem; font-weight: 600; text-align: left;
+}
+.menu-item:hover { background: rgba(255, 255, 255, 0.1); }
+
+.menu-item-switch {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 10px 15px;
+    font-size: 0.9rem; font-weight: 600;
+}
+
+.switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute; cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(255,255,255,0.1);
+    transition: .4s; border-radius: 20px;
+}
+.slider:before {
+    position: absolute; content: "";
+    height: 14px; width: 14px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    transition: .4s; border-radius: 50%;
+}
+input:checked + .slider { background-color: var(--primary-color); }
+input:checked + .slider:before { transform: translateX(14px); }
+
+
+/* RWD */
+@media (max-width: 480px) {
+    .settings-btn { top: 15px; right: 15px; }
+}

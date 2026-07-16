@@ -1,0 +1,163 @@
+/* ===== 台灣連假倒數（吃豆豆橫條、年度時間軸、連假清單 Modal）===== */
+/* ===== 台灣連假倒數：吃豆豆橫條 ===== */
+@property --mouth {
+    syntax: '<number>';
+    inherits: false;
+    initial-value: 4;
+}
+.pac-bar {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    height: 44px;
+    margin: 14px auto 0;
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: 22px;
+    display: flex; align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.pac-bar:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+.pac-track {
+    position: absolute;
+    left: 42px; right: 96px;
+    top: 50%; transform: translateY(-50%);
+    height: 6px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.pac-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--secondary-color);
+    opacity: 0.5; flex-shrink: 0;
+    transition: opacity 0.3s;
+}
+.pac-man {
+    position: absolute;
+    top: 50%; left: 42px;
+    width: 26px; height: 26px;
+    transform: translate(-50%, -50%);
+    transition: left 0.6s cubic-bezier(0.4,0,0.2,1);
+    z-index: 2;
+    filter: drop-shadow(0 0 4px rgba(255,220,0,0.4));
+}
+/* 圓身不閃，缺口中心固定對準正右方(90deg)，只上下開合 */
+.pac-man .pac-body {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg at 50% 50%,
+        #ffd500 0deg,
+        #ffd500 calc(90deg - var(--mouth) * 0.5deg),
+        transparent calc(90deg - var(--mouth) * 0.5deg),
+        transparent calc(90deg + var(--mouth) * 0.5deg),
+        #ffd500 calc(90deg + var(--mouth) * 0.5deg),
+        #ffd500 360deg
+    );
+    animation: mouth 0.3s ease-in-out infinite alternate;
+}
+@keyframes mouth {
+    0%   { --mouth: 4; }
+    100% { --mouth: 60; }
+}
+.pac-goal {
+    position: absolute; right: 66px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem; z-index: 1;
+    animation: pac-goal-bob 1.6s ease-in-out infinite;
+}
+@keyframes pac-goal-bob {
+    0%,100% { transform: translateY(-50%) scale(1); }
+    50% { transform: translateY(-58%) scale(1.08); }
+}
+.pac-text {
+    position: absolute; right: 14px; top: 50%;
+    transform: translateY(-50%);
+    text-align: right; line-height: 1.15;
+}
+.pac-days { font-size: 1.05rem; font-weight: 800; color: #ffd500; font-variant-numeric: tabular-nums; }
+.pac-name { font-size: 0.6rem; opacity: 0.7; }
+
+/* ===== 連假清單 Modal：年度時間軸 ===== */
+/* 垂直配置（由上到下）：emoji 第二排(2px) / 第一排(22px) / 主線(48px) / 補班標記(52px) / 月份標籤(63px) */
+.cal-timeline {
+    position: relative;
+    height: 76px;
+    margin: 2px 12px 0;
+}
+.tl-line {
+    position: absolute; left: 0; right: 0; top: 48px;
+    height: 2px; border-radius: 1px;
+    background: rgba(128,128,128,0.35);
+}
+.tl-tick {
+    position: absolute; top: 51px;
+    width: 1px; height: 6px;
+    background: rgba(128,128,128,0.45);
+    transform: translateX(-50%);
+}
+.tl-month {
+    position: absolute; top: 63px;
+    transform: translateX(-50%);
+    font-size: 0.6rem; opacity: 0.55; white-space: nowrap;
+}
+.tl-today {
+    position: absolute; top: 40px;
+    width: 2px; height: 18px; border-radius: 1px;
+    background: var(--primary-color);
+    transform: translateX(-50%);
+}
+.tl-today-label {
+    position: absolute; top: 63px;
+    transform: translateX(-50%);
+    font-size: 0.6rem; font-weight: 700; color: var(--primary-color); white-space: nowrap;
+}
+.tl-seg {
+    position: absolute; top: 45px;
+    height: 8px; border-radius: 4px;
+    background: var(--primary-color);
+    opacity: 0.9;
+}
+.tl-emoji {
+    position: absolute; top: 22px;
+    transform: translateX(-50%);
+    font-size: 0.9rem; line-height: 1;
+    cursor: default;
+}
+.tl-emoji.tl-row2 { top: 2px; }
+.tl-makeup {
+    position: absolute; top: 52px;
+    width: 4px; height: 8px; border-radius: 2px;
+    background: #ffb020; /* 固定琥珀色：與吃豆人黃同一套固定強調色，避免和 sunset/lava 主色混淆 */
+    transform: translateX(-50%);
+}
+.cal-tl-legend {
+    display: flex; justify-content: flex-end; gap: 14px;
+    font-size: 0.6rem; opacity: 0.65;
+    margin: 0 12px 2px;
+}
+.cal-tl-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.cal-tl-legend .lg-h { width: 12px; height: 6px; border-radius: 3px; background: var(--primary-color); }
+.cal-tl-legend .lg-m { width: 4px; height: 8px; border-radius: 2px; background: #ffb020; }
+
+/* ===== 連假清單 / 詢問 Modal ===== */
+.cal-list { list-style: none; padding: 0; margin: 0; }
+.cal-head { font-weight: 800; opacity: 0.8; padding: 12px 4px 4px; font-size: 0.85rem; }
+.cal-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 4px; border-bottom: 1px solid rgba(128,128,128,0.15); font-size: 0.85rem;
+}
+.cal-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-range { opacity: 0.65; flex-shrink: 0; font-variant-numeric: tabular-nums; font-size: 0.78rem; }
+.cal-count {
+    flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums;
+    font-size: 0.78rem; color: var(--primary-color); min-width: 56px; text-align: right;
+}
+.cal-empty { opacity: 0.6; padding: 8px 4px; font-size: 0.8rem; }
+.cal-ask-actions { display: flex; gap: 10px; padding: 4px 0 4px; }
+.cal-ask-yes, .cal-ask-no {
+    flex: 1; padding: 10px; border-radius: 10px; cursor: pointer; font-weight: 700; border: none;
+}
+.cal-ask-yes { background: var(--primary-color); color: #000; }
+.cal-ask-no { background: transparent; border: 1px solid rgba(128,128,128,0.4); color: var(--text-color); }

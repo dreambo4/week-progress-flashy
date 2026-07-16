@@ -1,0 +1,108 @@
+/* ===== Modal 通用樣式與時間設定 Modal ===== */
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 2000000;
+    display: none; /* Hidden by default */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal-box {
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: 24px;
+    width: 90%;
+    max-width: 450px;
+    padding: 2rem;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modal-pop {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-header h3 { font-size: 1.2rem; color: var(--primary-color); }
+
+.close-btn {
+    background: none; border: none; color: var(--text-color);
+    font-size: 1.5rem; cursor: pointer; opacity: 0.5;
+}
+.close-btn:hover { opacity: 1; }
+
+.modal-section-title {
+    font-size: 0.8rem; opacity: 0.6; margin: 1rem 0 0.5rem;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+
+.time-grid-modal {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.time-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.time-input-group label { font-size: 0.75rem; font-weight: bold; }
+
+.time-input-group input[type="time"] {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-color);
+    padding: 8px;
+    font-size: 1rem;
+    outline: none;
+}
+
+.workdays-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+.workday-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+
+.modal-footer { margin-top: 2rem; text-align: right; }
+
+.save-btn {
+    background: var(--primary-color);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.save-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+.save-btn:active { transform: scale(0.95); }
+
