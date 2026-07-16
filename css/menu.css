@@ -31,7 +31,7 @@
     flex-direction: column;
     gap: 5px;
     z-index: 1000;
-    width: 240px;
+    width: min(max(240px, 18vw), calc(100vw - 40px)); /* 依視窗佔比縮放，最小 240px，極窄螢幕兩側各留 20px */
     max-height: calc(100vh - 265px); /* top 75px + 恐龍區 180px + 間距 10px，底端停在恐龍活動區之上 */
     overflow-y: auto;
     scrollbar-width: thin;
