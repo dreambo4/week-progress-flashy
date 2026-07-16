@@ -237,30 +237,28 @@
 .wf-hour-water {
     position: absolute;
     left: 0; right: 0; bottom: 0;
-    background: linear-gradient(to bottom, rgba(79, 172, 254, 0.30), rgba(0, 242, 254, 0.10));
+    /* 頂部 10px 由透明淡入水色：水面沒有固定硬線 */
+    background: linear-gradient(to bottom, rgba(79, 172, 254, 0) 0, rgba(79, 172, 254, 0.12) 10px, rgba(0, 242, 254, 0.05) 100%);
     pointer-events: none;
 }
-/* 波紋：兩個旋轉的大圓角方塊，底緣掃過水面線時產生起伏；
-   雙層速度/相位/顏色不同，交錯出自然的水波感 */
+/* 波紋：兩個旋轉的大圓角方塊「沉在水面下」，頂緣弧線掃過水面線產生起伏；
+   主體都在水裡，不會把水面上方的格子染色；雙層轉速/相位/深淺不同，交錯出自然水波 */
 .wf-hour-water::before,
 .wf-hour-water::after {
     content: '';
     position: absolute;
-    top: 0; left: 50%;
-    width: 120px; height: 120px;
-    margin-left: -60px;
-    animation: wf-wave-spin 7s linear infinite;
-}
-.wf-hour-water::before {
-    margin-top: -114px;
+    top: 2px; left: 50%;
+    width: 200px; height: 200px;
+    margin-left: -100px;
     border-radius: 41%;
-    background: rgba(79, 172, 254, 0.30);
+    background: rgba(79, 172, 254, 0.10);
+    animation: wf-wave-spin 9s linear infinite;
 }
 .wf-hour-water::after {
-    margin-top: -116px;
-    border-radius: 37%;
-    background: rgba(0, 242, 254, 0.16);
-    animation-duration: 11s;
+    top: -2px;
+    border-radius: 39%;
+    background: rgba(0, 242, 254, 0.07);
+    animation-duration: 13s;
     animation-direction: reverse;
 }
 @keyframes wf-wave-spin { to { transform: rotate(360deg); } }
