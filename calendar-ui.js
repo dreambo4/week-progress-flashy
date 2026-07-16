@@ -19,6 +19,18 @@
         return '🏖️';
     }
 
+    // 官方全名 → 慣用短名（清單與橫條顯示用；資料層保留全名）
+    function shortName(name) {
+        if (!name) return name;
+        const alias = [
+            [/光復/, '光復節'],
+            [/孔子誕辰/, '教師節'],
+            [/國慶/, '國慶日'],
+        ];
+        for (const [re, s] of alias) if (re.test(name)) return s;
+        return name;
+    }
+
     function fmtDate(ymd) {
         return `${+ymd.slice(4, 6)}/${+ymd.slice(6, 8)}`;
     }
@@ -52,7 +64,7 @@
 
         const h = next.holiday;
         document.getElementById('pacDays').textContent = next.daysLeft === 0 ? '就是今天' : `${next.daysLeft} 天`;
-        document.getElementById('pacName').textContent = `距離 ${h.name}`;
+        document.getElementById('pacName').textContent = `距離 ${shortName(h.name)}`;
         document.getElementById('pacGoal').textContent = goalEmoji(h.name);
 
         // 進度 = 上一個假期結束 → 這個連假開始 的時間比例
@@ -132,7 +144,7 @@
             li.className = 'cal-row';
             const name = document.createElement('span');
             name.className = 'cal-name';
-            name.textContent = `${goalEmoji(h.name)} ${h.name}`;
+            name.textContent = `${goalEmoji(h.name)} ${shortName(h.name)}`;
             const range = document.createElement('span');
             range.className = 'cal-range';
             range.textContent = h.length > 1
