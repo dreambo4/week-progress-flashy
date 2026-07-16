@@ -828,6 +828,64 @@ input:checked + .slider:before { transform: translateX(14px); }
     color: var(--text-color);
 }
 
+/* 天氣區塊可點擊（開啟天氣預報 Modal） */
+.weather-dashboard { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.weather-dashboard:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
+
+/* 天氣預報 Modal */
+.wf-body { max-height: min(62vh, 540px); overflow-y: auto; }
+.wf-location {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+.wf-hourly {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+}
+.wf-hour {
+    flex: 0 0 auto;
+    min-width: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 6px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: var(--card-border);
+    font-size: 0.7rem;
+}
+.wf-hour.now {
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+}
+.wf-hour-time { opacity: 0.6; }
+.wf-hour-emoji { font-size: 1.2rem; }
+.wf-hour-temp { font-weight: 700; }
+.wf-hour-pop { opacity: 0.75; }
+
+.wf-daily { list-style: none; padding: 0; margin: 0; }
+.wf-day {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px 30px 60px 76px;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 4px;
+    font-size: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.wf-day:last-child { border-bottom: none; }
+.wf-day.today .wf-day-name { color: var(--primary-color); font-weight: 700; }
+.wf-day-date { opacity: 0.5; font-size: 0.7rem; }
+.wf-day-emoji { text-align: center; }
+.wf-day-pop { opacity: 0.75; font-size: 0.75rem; }
+.wf-day-temp { text-align: right; font-weight: 700; white-space: nowrap; }
+.wf-temp-lo { opacity: 0.55; font-weight: 400; }
+
 /* Celebration Mode */
 body.celebration-mode { animation: bg-rainbow 10s infinite linear; }
 @keyframes bg-rainbow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }

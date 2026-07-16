@@ -250,7 +250,7 @@ async function fetchWeather() {
         updateSolarAngle();
         if (!weatherConfig.bgEnabled && !weatherConfig.infoEnabled && !notiConfig.weatherAlert) return;
         try {
-            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,relative_humidity_2m&daily=sunrise,sunset&timezone=auto`);
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,relative_humidity_2m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto`);
             const data = await response.json();
             currentWeatherData = data;
             const newCode = data.current.weather_code;
@@ -268,6 +268,9 @@ async function fetchWeather() {
             previousWeatherCode = newCode;
             localStorage.setItem('week-progress-prev-weather-code', JSON.stringify(newCode));
             applyWeatherEffects();
+            // 若天氣預報 modal 開著（每 30 分鐘定時刷新時），同步更新內容
+            const wfModal = document.getElementById('weatherModal');
+            if (wfModal && wfModal.classList.contains('active')) renderWeatherModal();
             // Check umbrella reminder at end-of-work
             checkUmbrellaReminder(newCode);
         } catch (error) {
@@ -345,10 +348,127 @@ function applyWeatherEffects() {
 function getWeatherEmoji(code) {
     if (code === 0) return '☀️';
     if (code <= 3) return '☁️';
+    if (code === 45 || code === 48) return '🌫️';
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return '❄️';
     if (code >= 51 && code <= 67) return '🌧️';
     if (code >= 80 && code <= 82) return '🌦️';
     if (code >= 95) return '⛈️';
     return '⛅';
+}
+
+// ===== 天氣預報 Modal（點擊天氣區塊開啟）=====
+const GEO_NAME_CACHE_KEY = 'week-progress-geo-name';
+let locationName = null;
+
+async function fetchLocationName(lat, lon) {
+    // 座標四捨五入到小數 2 位（約 1km），沒移動就用 localStorage 快取，不重打 API
+    const keyLat = lat.toFixed(2), keyLon = lon.toFixed(2);
+    const cached = JSON.parse(localStorage.getItem(GEO_NAME_CACHE_KEY) || 'null');
+    if (cached && cached.lat === keyLat && cached.lon === keyLon && cached.name) return cached.name;
+    // BigDataCloud 免費 client-side 反向地理編碼，無需 API key
+    const resp = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh-Hant`);
+    const data = await resp.json();
+    // 台灣通常 principalSubdivision=縣市、locality=鄉鎮市區；Set 去除重複層級
+    const name = [...new Set([data.principalSubdivision, data.city, data.locality].filter(Boolean))].join(' ');
+    if (name) localStorage.setItem(GEO_NAME_CACHE_KEY, JSON.stringify({ lat: keyLat, lon: keyLon, name }));
+    return name || null;
+}
+
+function openWeatherModal() {
+    const modal = document.getElementById('weatherModal');
+    if (!modal || !currentWeatherData) return;
+    renderWeatherModal();
+    modal.classList.add('active');
+    gtag('event', 'weather_modal_open');
+    const locEl = document.getElementById('wfLocation');
+    if (!locEl) return;
+    if (locationName) {
+        locEl.textContent = `📍 ${locationName}`;
+    } else if (userLat !== null && userLon !== null) {
+        locEl.textContent = '📍 定位中…';
+        fetchLocationName(userLat, userLon)
+            .then(name => { locationName = name; locEl.textContent = name ? `📍 ${name}` : '📍 目前位置'; })
+            .catch(() => { locEl.textContent = '📍 目前位置'; });
+    } else {
+        locEl.textContent = '📍 目前位置';
+    }
+}
+
+function closeWeatherModal() {
+    const modal = document.getElementById('weatherModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function renderWeatherModal() {
+    const hourlyBox = document.getElementById('wfHourly');
+    const dailyList = document.getElementById('wfDaily');
+    if (!hourlyBox || !dailyList || !currentWeatherData) return;
+    const { hourly, daily } = currentWeatherData;
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const fmtPop = (p) => `💧${p == null ? '--' : p + '%'}`;
+
+    // 今日逐時：從當前小時到今晚 23 時（timezone=auto，回傳時間即當地時間）
+    hourlyBox.textContent = '';
+    if (hourly && hourly.time) {
+        const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+        const curHour = now.getHours();
+        hourly.time.forEach((t, i) => {
+            if (!t.startsWith(todayStr)) return;
+            const h = parseInt(t.slice(11, 13), 10);
+            if (h < curHour) return;
+            const cell = document.createElement('div');
+            cell.className = 'wf-hour' + (h === curHour ? ' now' : '');
+            const time = document.createElement('span');
+            time.className = 'wf-hour-time';
+            time.textContent = h === curHour ? '現在' : `${h}時`;
+            const emoji = document.createElement('span');
+            emoji.className = 'wf-hour-emoji';
+            emoji.textContent = getWeatherEmoji(hourly.weather_code[i]);
+            const temp = document.createElement('span');
+            temp.className = 'wf-hour-temp';
+            temp.textContent = `${Math.round(hourly.temperature_2m[i])}°`;
+            const pop = document.createElement('span');
+            pop.className = 'wf-hour-pop';
+            pop.textContent = fmtPop(hourly.precipitation_probability ? hourly.precipitation_probability[i] : null);
+            cell.append(time, emoji, temp, pop);
+            hourlyBox.appendChild(cell);
+        });
+    }
+
+    // 未來 7 天（含今天）：星期、天氣、降雨機率、低/高溫
+    dailyList.textContent = '';
+    if (daily && daily.time && daily.weather_code) {
+        const weekNames = ['日', '一', '二', '三', '四', '五', '六'];
+        daily.time.forEach((d, i) => {
+            const date = new Date(`${d}T00:00:00`);
+            const li = document.createElement('li');
+            li.className = 'wf-day' + (i === 0 ? ' today' : '');
+            const day = document.createElement('span');
+            day.className = 'wf-day-name';
+            day.textContent = i === 0 ? '今天' : i === 1 ? '明天' : `週${weekNames[date.getDay()]}`;
+            const dateEl = document.createElement('span');
+            dateEl.className = 'wf-day-date';
+            dateEl.textContent = `${date.getMonth() + 1}/${date.getDate()}`;
+            const emoji = document.createElement('span');
+            emoji.className = 'wf-day-emoji';
+            emoji.textContent = getWeatherEmoji(daily.weather_code[i]);
+            const pop = document.createElement('span');
+            pop.className = 'wf-day-pop';
+            pop.textContent = fmtPop(daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : null);
+            const temp = document.createElement('span');
+            temp.className = 'wf-day-temp';
+            const lo = document.createElement('span');
+            lo.className = 'wf-temp-lo';
+            lo.textContent = `${Math.round(daily.temperature_2m_min[i])}°`;
+            const hi = document.createElement('span');
+            hi.className = 'wf-temp-hi';
+            hi.textContent = `${Math.round(daily.temperature_2m_max[i])}°`;
+            temp.append(lo, document.createTextNode(' / '), hi);
+            li.append(day, dateEl, emoji, pop, temp);
+            dailyList.appendChild(li);
+        });
+    }
 }
 
 function createWeatherVisuals(code) {
@@ -755,7 +875,8 @@ setTheme(savedTheme);
 document.getElementById('settingsBtn').onclick = (e) => { e.stopPropagation(); document.getElementById('themeMenu').classList.toggle('active'); gtag('event', 'settings_open', { panel: 'menu' }); };
 window.onclick = (e) => { 
     if (document.getElementById('themeMenu')) document.getElementById('themeMenu').classList.remove('active'); 
-    if (e.target === document.getElementById('settingsModal')) closeTimeModal(); 
+    if (e.target === document.getElementById('settingsModal')) closeTimeModal();
+    if (e.target === document.getElementById('weatherModal')) closeWeatherModal();
 };
 function updateSolarAngle() {
     if (userLat === null || userLon === null || typeof SunCalc === 'undefined') return;

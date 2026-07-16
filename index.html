@@ -14,7 +14,7 @@
       gtag('config', 'G-FDTCZB7C25');
     </script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22none%22 stroke=%22%2300f2fe%22 stroke-width=%2210%22 stroke-dasharray=%22210 70%22 stroke-linecap=%22round%22><animateTransform attributeName=%22transform%22 type=%22rotate%22 from=%220 50 50%22 to=%22360 50 50%22 dur=%2210s%22 repeatCount=%22indefinite%22/></circle><path d=%22M30 50 L45 65 L70 35%22 fill=%22none%22 stroke=%22%234facfe%22 stroke-width=%228%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>">
-    <link rel="stylesheet" href="style.css?t=202607161327">
+    <link rel="stylesheet" href="style.css?t=202607161416">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 </head>
@@ -172,7 +172,7 @@
             </div>
         </div>
 
-        <div class="weather-dashboard" id="weatherInfoBox" style="display: none;">
+        <div class="weather-dashboard" id="weatherInfoBox" style="display: none;" onclick="openWeatherModal()" title="點擊查看所在地區與未來天氣">
             <div class="weather-main">
                 <div id="weatherEmoji" class="weather-emoji">☀️</div>
                 <div id="weatherTemp" class="weather-temp">--°C</div>
@@ -224,6 +224,23 @@
         </div>
     </div>
 
+    <!-- 天氣預報 Modal（點擊天氣區塊開啟）-->
+    <div id="weatherModal" class="modal-overlay">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>🌤️ 天氣預報</h3>
+                <button class="close-btn" onclick="closeWeatherModal()">&times;</button>
+            </div>
+            <div class="modal-body wf-body">
+                <div class="wf-location" id="wfLocation">📍 定位中…</div>
+                <div class="modal-section-title">今日逐時</div>
+                <div class="wf-hourly" id="wfHourly"></div>
+                <div class="modal-section-title">未來 7 天</div>
+                <ul class="wf-daily" id="wfDaily"></ul>
+            </div>
+        </div>
+    </div>
+
     <!-- 當週套用作息詢問 Modal -->
     <div id="calAskModal" class="modal-overlay">
         <div class="modal-box" onclick="event.stopPropagation()">
@@ -271,7 +288,7 @@
         </div>
     </div>
 
-    <script src="script.js?t=202607161019"></script>
+    <script src="script.js?t=202607161416"></script>
     <script src="game.js?t=202607151004"></script>
     <script src="calendar.js?t=202607151344"></script>
     <script src="calendar-ui.js?t=202607161327"></script>
