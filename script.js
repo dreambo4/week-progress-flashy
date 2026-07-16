@@ -763,18 +763,22 @@ function updateSolarAngle() {
     const now = new Date();
     const pos = SunCalc.getPosition(now, userLat, userLon);
     const altitude = pos.altitude * 180 / Math.PI;
-    const azimuth = pos.azimuth * 180 / Math.PI;
-    
+
     // 動態更新太陽位置
     const sun = document.getElementById('dynamicSun');
     if (sun) {
         // 仰角對應到垂直位置 (0度地平線=20%, 90度天頂=0%)
         // 這樣能保證太陽不會掉得太下面擋住主卡片
         let topPercent = Math.max(0, Math.min(20, 20 - (altitude / 90 * 20)));
-        // 方位角對應到水平位置 (東-90=85%, 南0=50%, 西+90=15%)
-        // 早上太陽從右邊(東)升起，傍晚落到左邊(西)
+        // 水平位置用「日出→日落的時間進度」等速換算：日出=85%(右)、日落=15%(左)
+        // 不能用方位角換算：台灣夏季正午太陽近天頂，方位角整個早上黏在東、
+        // 正午一小時內瞬間掃到西，看起來只剩左右兩種狀態
         // 內縮範圍 (15% ~ 85%) 避免太陽被左右邊緣裁切
-        let leftPercent = Math.max(15, Math.min(85, 50 - (azimuth / 90 * 35)));
+        const times = SunCalc.getTimes(now, userLat, userLon);
+        let dayProgress = (now - times.sunrise) / (times.sunset - times.sunrise);
+        if (!isFinite(dayProgress)) dayProgress = 0.5;
+        dayProgress = Math.max(0, Math.min(1, dayProgress));
+        let leftPercent = 85 - dayProgress * 70;
         
         sun.style.top = topPercent + '%';
         sun.style.left = leftPercent + '%';
