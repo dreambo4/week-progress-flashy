@@ -234,37 +234,50 @@
 /* 降雨機率水位視覺化：格子底部填水，水面高度 = 機率 */
 .wf-hour { position: relative; overflow: hidden; }
 .wf-hour > span { position: relative; z-index: 1; }
-/* 水體只有單一圖層，上緣用 mask 雕成波浪形：
-   - mask 前兩層是小圓弧花紋（波長 18px / 24px，一格約 3 個波峰），反向流動交錯起伏
-   - 第三層是實心區（水面下 4px 起到底），與圓弧聯集成完整水形
-   單一圖層 = 沒有半透明層疊交界，不會出現固定硬線；
-   位移量 72px 取兩種波長的公倍數，循環接縫不跳動 */
+/* 兩個帶透明度的水圖層：各自用 mask 把上緣雕成波浪、各自流動
+   （波長 18px / 24px、一格約 3 個波峰、反向不同速），交疊處顏色自然變深；
+   每層的邊界都是會動的波浪線，沒有任何固定直線。
+   位移量 72px 取各自波長的整數倍，循環接縫不跳動 */
 .wf-hour-water {
     position: absolute;
     left: 0; right: 0; bottom: 0;
-    background: linear-gradient(to bottom, rgba(79, 172, 254, 0.18), rgba(0, 242, 254, 0.06));
     pointer-events: none;
-    -webkit-mask-image:
-        radial-gradient(circle at 9px 10px, #000 9px, transparent 9.5px),
-        radial-gradient(circle at 12px 11px, #000 10px, transparent 10.5px),
-        linear-gradient(#000, #000);
-    -webkit-mask-size: 18px 12px, 24px 12px, 100% calc(100% - 4px);
-    -webkit-mask-repeat: repeat-x, repeat-x, no-repeat;
-    -webkit-mask-position: 0 0, 0 0, 0 4px;
-    mask-image:
-        radial-gradient(circle at 9px 10px, #000 9px, transparent 9.5px),
-        radial-gradient(circle at 12px 11px, #000 10px, transparent 10.5px),
-        linear-gradient(#000, #000);
-    mask-size: 18px 12px, 24px 12px, 100% calc(100% - 4px);
-    mask-repeat: repeat-x, repeat-x, no-repeat;
-    mask-position: 0 0, 0 0, 0 4px;
-    animation: wf-wave-slide 7s linear infinite;
 }
-@keyframes wf-wave-slide {
-    to {
-        -webkit-mask-position: -72px 0, 72px 0, 0 4px;
-        mask-position: -72px 0, 72px 0, 0 4px;
-    }
+.wf-hour-water::before,
+.wf-hour-water::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+}
+.wf-hour-water::before {
+    background: linear-gradient(to bottom, rgba(79, 172, 254, 0.14), rgba(79, 172, 254, 0.05));
+    -webkit-mask-image: radial-gradient(circle at 9px 10px, #000 9px, transparent 9.5px), linear-gradient(#000, #000);
+    -webkit-mask-size: 18px 12px, 100% calc(100% - 4px);
+    -webkit-mask-repeat: repeat-x, no-repeat;
+    -webkit-mask-position: 0 0, 0 4px;
+    mask-image: radial-gradient(circle at 9px 10px, #000 9px, transparent 9.5px), linear-gradient(#000, #000);
+    mask-size: 18px 12px, 100% calc(100% - 4px);
+    mask-repeat: repeat-x, no-repeat;
+    mask-position: 0 0, 0 4px;
+    animation: wf-wave-a 7s linear infinite;
+}
+.wf-hour-water::after {
+    background: linear-gradient(to bottom, rgba(0, 242, 254, 0.10), rgba(0, 242, 254, 0.04));
+    -webkit-mask-image: radial-gradient(circle at 12px 12px, #000 10px, transparent 10.5px), linear-gradient(#000, #000);
+    -webkit-mask-size: 24px 14px, 100% calc(100% - 6px);
+    -webkit-mask-repeat: repeat-x, no-repeat;
+    -webkit-mask-position: 0 0, 0 6px;
+    mask-image: radial-gradient(circle at 12px 12px, #000 10px, transparent 10.5px), linear-gradient(#000, #000);
+    mask-size: 24px 14px, 100% calc(100% - 6px);
+    mask-repeat: repeat-x, no-repeat;
+    mask-position: 0 0, 0 6px;
+    animation: wf-wave-b 10s linear infinite;
+}
+@keyframes wf-wave-a {
+    to { -webkit-mask-position: -72px 0, 0 4px; mask-position: -72px 0, 0 4px; }
+}
+@keyframes wf-wave-b {
+    to { -webkit-mask-position: 72px 0, 0 6px; mask-position: 72px 0, 0 6px; }
 }
 
 .wf-daily { list-style: none; padding: 0; margin: 0; }
