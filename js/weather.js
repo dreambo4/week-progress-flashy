@@ -181,8 +181,16 @@ function renderWeatherModal() {
             if (!t.startsWith(todayStr)) return;
             const h = parseInt(t.slice(11, 13), 10);
             if (h < curHour) return;
+            const popVal = hourly.precipitation_probability ? hourly.precipitation_probability[i] : null;
             const cell = document.createElement('div');
             cell.className = 'wf-hour' + (h === curHour ? ' now' : '');
+            // 降雨機率水位：格子底部填水，水面高度 = 機率，波紋動畫由 CSS 產生
+            if (popVal > 0) {
+                const water = document.createElement('div');
+                water.className = 'wf-hour-water';
+                water.style.height = Math.min(100, popVal) + '%';
+                cell.appendChild(water);
+            }
             const time = document.createElement('span');
             time.className = 'wf-hour-time';
             time.textContent = h === curHour ? '現在' : `${h}時`;
@@ -194,7 +202,7 @@ function renderWeatherModal() {
             temp.textContent = `${Math.round(hourly.temperature_2m[i])}°`;
             const pop = document.createElement('span');
             pop.className = 'wf-hour-pop';
-            pop.textContent = fmtPop(hourly.precipitation_probability ? hourly.precipitation_probability[i] : null);
+            pop.textContent = fmtPop(popVal);
             cell.append(time, emoji, temp, pop);
             hourlyBox.appendChild(cell);
         });

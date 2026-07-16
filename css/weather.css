@@ -231,6 +231,40 @@
 .wf-hour-temp { font-weight: 700; }
 .wf-hour-pop { opacity: 0.75; }
 
+/* 降雨機率水位視覺化：格子底部填水，水面高度 = 機率 */
+.wf-hour { position: relative; overflow: hidden; }
+.wf-hour > span { position: relative; z-index: 1; }
+.wf-hour-water {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to bottom, rgba(79, 172, 254, 0.30), rgba(0, 242, 254, 0.10));
+    pointer-events: none;
+}
+/* 波紋：兩個旋轉的大圓角方塊，底緣掃過水面線時產生起伏；
+   雙層速度/相位/顏色不同，交錯出自然的水波感 */
+.wf-hour-water::before,
+.wf-hour-water::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    width: 120px; height: 120px;
+    margin-left: -60px;
+    animation: wf-wave-spin 7s linear infinite;
+}
+.wf-hour-water::before {
+    margin-top: -114px;
+    border-radius: 41%;
+    background: rgba(79, 172, 254, 0.30);
+}
+.wf-hour-water::after {
+    margin-top: -116px;
+    border-radius: 37%;
+    background: rgba(0, 242, 254, 0.16);
+    animation-duration: 11s;
+    animation-direction: reverse;
+}
+@keyframes wf-wave-spin { to { transform: rotate(360deg); } }
+
 .wf-daily { list-style: none; padding: 0; margin: 0; }
 .wf-day {
     display: grid;
