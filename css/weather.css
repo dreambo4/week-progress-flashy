@@ -250,13 +250,13 @@
     top: 2px; left: 50%;
     width: 200px; height: 200px;
     margin-left: -100px;
-    border-radius: 41%;
+    border-radius: 46%;
     background: rgba(79, 172, 254, 0.10);
     animation: wf-wave-spin 9s linear infinite;
 }
 .wf-hour-water::after {
     top: -2px;
-    border-radius: 39%;
+    border-radius: 45%;
     background: rgba(0, 242, 254, 0.07);
     animation-duration: 13s;
     animation-direction: reverse;
