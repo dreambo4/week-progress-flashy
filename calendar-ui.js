@@ -16,6 +16,8 @@
         if (/勞動/.test(name)) return '🛠️';
         if (/國慶|雙十/.test(name)) return '🇹🇼';
         if (/兒童/.test(name)) return '🎈';
+        if (/光復/.test(name)) return '✨';
+        if (/行憲/.test(name)) return '🎄';
         return '🏖️';
     }
 
