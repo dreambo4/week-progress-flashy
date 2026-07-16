@@ -120,6 +120,70 @@
         });
     }
 
+    // ===== 年度時間軸（今天 → +365 天，依比例佈點）=====
+    const TL_DAYS = 365;
+
+    function renderTimeline(y, today) {
+        const area = document.getElementById('calTimeline');
+        const legend = document.getElementById('calTlLegend');
+        if (!area) return;
+        area.textContent = '';
+        const show = y.holidays.length || y.workdays.length;
+        area.style.display = show ? '' : 'none';
+        if (legend) legend.style.display = show ? '' : 'none';
+        const lgMakeup = document.getElementById('calTlLegendMakeup');
+        if (lgMakeup) lgMakeup.style.display = y.workdays.length ? '' : 'none'; // 一年內沒補班就不擺圖例
+        if (!show) return;
+
+        const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+        const pct = (ms) => Math.max(0, Math.min(100, (ms - t0) / 86400000 / TL_DAYS * 100));
+
+        const el = (cls, leftPct, text) => {
+            const d = document.createElement('div');
+            d.className = cls;
+            if (leftPct != null) d.style.left = leftPct + '%';
+            if (text) d.textContent = text;
+            area.appendChild(d);
+            return d;
+        };
+
+        el('tl-line');
+
+        // 月份刻度：每月 1 號一格，隔月標月份；貼近「今天」或終點的標籤不顯示避免重疊
+        const m = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        for (let i = 0; ; i++) {
+            const days = (m.getTime() - t0) / 86400000;
+            if (days > TL_DAYS) break;
+            const p = days / TL_DAYS * 100;
+            el('tl-tick', p);
+            if (i % 2 === 0 && p > 7 && p < 95) el('tl-month', p, (m.getMonth() + 1) + '月');
+            m.setMonth(m.getMonth() + 1);
+        }
+
+        el('tl-today', 0);
+        el('tl-today-label', 0, '今天');
+
+        // 連假：線上區段 + 上方 emoji（兩排交錯，避免相鄰連假擠在一起）
+        y.holidays.forEach((h, i) => {
+            const a = pct(TW.parseYmd(h.start).getTime());
+            const b = pct(TW.parseYmd(h.end).getTime() + 86400000); // 含 end 當天整天
+            const tip = h.length > 1
+                ? `${shortName(h.name)} ${fmtDate(h.start)}–${fmtDate(h.end)}（${h.length}天）`
+                : `${shortName(h.name)} ${fmtDate(h.start)} ${weekLabel(h.start)}`;
+            const seg = el('tl-seg', a);
+            seg.style.width = Math.max(b - a, 1.2) + '%'; // 單日假至少給看得見的寬度
+            seg.title = tip;
+            const em = el('tl-emoji' + (i % 2 ? ' tl-row2' : ''), (a + b) / 2, goalEmoji(h.name));
+            em.title = tip;
+        });
+
+        // 補班：線下小標記
+        y.workdays.forEach(w => {
+            el('tl-makeup', pct(TW.parseYmd(w.date).getTime()))
+                .title = `補班 ${fmtDate(w.date)} ${weekLabel(w.date)}`;
+        });
+    }
+
     // ===== 連假清單 Modal =====
     function openList() {
         const modal = document.getElementById('calendarModal');
@@ -127,6 +191,7 @@
         if (!modal || !list || !analysis) return;
         const today = new Date();
         const y = TW.withinYear(analysis, today);
+        renderTimeline(y, today);
         list.textContent = '';
 
         const addHeader = (t) => {
