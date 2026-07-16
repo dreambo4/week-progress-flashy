@@ -185,11 +185,10 @@ function renderWeatherModal() {
             const cell = document.createElement('div');
             cell.className = 'wf-hour' + (h === curHour ? ' now' : '');
             // 降雨機率水位：格子底部填水，水面高度 = 機率，波紋動畫由 CSS 產生
-            // 封頂 90%：99~100% 時水面波浪仍看得到，不會整格糊成一片
             if (popVal > 0) {
                 const water = document.createElement('div');
                 water.className = 'wf-hour-water';
-                water.style.height = Math.min(90, popVal) + '%';
+                water.style.height = Math.min(100, popVal) + '%';
                 cell.appendChild(water);
             }
             const time = document.createElement('span');
