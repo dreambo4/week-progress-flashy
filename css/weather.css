@@ -234,35 +234,38 @@
 /* 降雨機率水位視覺化：格子底部填水，水面高度 = 機率 */
 .wf-hour { position: relative; overflow: hidden; }
 .wf-hour > span { position: relative; z-index: 1; }
+/* 水體只有單一圖層，上緣用 mask 雕成波浪形：
+   - mask 前兩層是小圓弧花紋（波長 18px / 24px，一格約 3 個波峰），反向流動交錯起伏
+   - 第三層是實心區（水面下 4px 起到底），與圓弧聯集成完整水形
+   單一圖層 = 沒有半透明層疊交界，不會出現固定硬線；
+   位移量 72px 取兩種波長的公倍數，循環接縫不跳動 */
 .wf-hour-water {
     position: absolute;
     left: 0; right: 0; bottom: 0;
-    /* 頂部 10px 由透明淡入水色：水面沒有固定硬線 */
-    background: linear-gradient(to bottom, rgba(79, 172, 254, 0) 0, rgba(79, 172, 254, 0.12) 10px, rgba(0, 242, 254, 0.05) 100%);
+    background: linear-gradient(to bottom, rgba(79, 172, 254, 0.18), rgba(0, 242, 254, 0.06));
     pointer-events: none;
+    -webkit-mask-image:
+        radial-gradient(circle at 9px 10px, #000 9px, transparent 9.5px),
+        radial-gradient(circle at 12px 11px, #000 10px, transparent 10.5px),
+        linear-gradient(#000, #000);
+    -webkit-mask-size: 18px 12px, 24px 12px, 100% calc(100% - 4px);
+    -webkit-mask-repeat: repeat-x, repeat-x, no-repeat;
+    -webkit-mask-position: 0 0, 0 0, 0 4px;
+    mask-image:
+        radial-gradient(circle at 9px 10px, #000 9px, transparent 9.5px),
+        radial-gradient(circle at 12px 11px, #000 10px, transparent 10.5px),
+        linear-gradient(#000, #000);
+    mask-size: 18px 12px, 24px 12px, 100% calc(100% - 4px);
+    mask-repeat: repeat-x, repeat-x, no-repeat;
+    mask-position: 0 0, 0 0, 0 4px;
+    animation: wf-wave-slide 7s linear infinite;
 }
-/* 波紋：小圓弧連續花紋（radial-gradient 重複拼貼）沿水面橫向流動，
-   一格約 4~5 個小波峰；雙層波長/速度/方向不同，交錯出細碎波光。
-   位移量 -48px 是兩層波長（12px、16px）的公倍數，循環接縫不跳動 */
-.wf-hour-water::before,
-.wf-hour-water::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0;
-    top: -6px; height: 8px;
-    background: radial-gradient(circle at 6px 9px, rgba(79, 172, 254, 0.12) 6px, transparent 6.5px) repeat-x;
-    background-size: 12px 8px;
-    animation: wf-wave-slide 6s linear infinite;
+@keyframes wf-wave-slide {
+    to {
+        -webkit-mask-position: -72px 0, 72px 0, 0 4px;
+        mask-position: -72px 0, 72px 0, 0 4px;
+    }
 }
-.wf-hour-water::after {
-    top: -5px;
-    background: radial-gradient(circle at 8px 10px, rgba(0, 242, 254, 0.08) 7px, transparent 7.5px) repeat-x;
-    background-size: 16px 8px;
-    animation-duration: 9s;
-    animation-direction: reverse;
-    animation-delay: -2s;
-}
-@keyframes wf-wave-slide { to { background-position: -48px 0; } }
 
 .wf-daily { list-style: none; padding: 0; margin: 0; }
 .wf-day {
