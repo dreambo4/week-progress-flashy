@@ -1,4 +1,5 @@
 .firebase/
+.claude/devlog/
 .DS_Store
 firebase-debug.log
 firestore-debug.log
