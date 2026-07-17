@@ -172,18 +172,19 @@ function renderWeatherModal() {
     const pad = (n) => String(n).padStart(2, '0');
     const fmtPop = (p) => `💧${p == null ? '--' : p + '%'}`;
 
-    // 今日逐時：從當前小時到今晚 23 時（timezone=auto，回傳時間即當地時間）
+    // 未來 24 小時逐時：從當前小時開始，取連續 24 筆（timezone=auto，回傳時間即當地時間）
     hourlyBox.textContent = '';
     if (hourly && hourly.time) {
         const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
         const curHour = now.getHours();
-        hourly.time.forEach((t, i) => {
-            if (!t.startsWith(todayStr)) return;
+        const startIdx = hourly.time.findIndex((t) => t.startsWith(todayStr) && parseInt(t.slice(11, 13), 10) >= curHour);
+        const entries = startIdx === -1 ? [] : hourly.time.slice(startIdx, startIdx + 24).map((t, offset) => ({ t, i: startIdx + offset }));
+        entries.forEach(({ t, i }) => {
             const h = parseInt(t.slice(11, 13), 10);
-            if (h < curHour) return;
+            const isNow = i === startIdx;
             const popVal = hourly.precipitation_probability ? hourly.precipitation_probability[i] : null;
             const cell = document.createElement('div');
-            cell.className = 'wf-hour' + (h === curHour ? ' now' : '');
+            cell.className = 'wf-hour' + (isNow ? ' now' : '');
             // 降雨機率水位：格子底部填水，水面高度 = 機率，波紋動畫由 CSS 產生
             if (popVal > 0) {
                 const water = document.createElement('div');
@@ -193,7 +194,8 @@ function renderWeatherModal() {
             }
             const time = document.createElement('span');
             time.className = 'wf-hour-time';
-            time.textContent = h === curHour ? '現在' : `${h}時`;
+            // 跨日的第一格（0 時）額外標註「明天」，避免深夜時段看起來像時間倒退
+            time.textContent = isNow ? '現在' : (h === 0 ? '明天' : `${h}時`);
             const emoji = document.createElement('span');
             emoji.className = 'wf-hour-emoji';
             emoji.textContent = getWeatherEmoji(hourly.weather_code[i]);
