@@ -34,8 +34,8 @@ body {
 [data-theme="terminal"] .scanlines { display: block !important; }
 
 .container {
-    width: 100%;
-    max-width: max(600px, 45vw); /* 大螢幕依視窗佔比放大（45vw 在 1366px 寬時 ≈ 原本 600px） */
+    width: min(max(340px, 70vw), 1000px); /* 依視窗佔比放大：70vw，小螢幕不低於 340px，大螢幕 1000px 封頂 */
+    max-width: calc(100% - 40px); /* 極窄螢幕（<340px）仍保留左右間距，避免溢出 */
     padding: clamp(1.5rem, 5vw, 2.5rem);
     background: var(--card-bg);
     backdrop-filter: blur(15px);

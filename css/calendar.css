@@ -8,7 +8,7 @@
 .pac-bar {
     position: relative;
     width: 100%;
-    max-width: max(460px, 88%); /* 容器放大時維持佔比（88% ≈ 原 460px / 容器內寬 520px） */
+    max-width: 700px; /* 隨父層 .container 等比放大，跟著同一個 1000px 封頂等比縮放，這裡另設上限避免橫條在極寬卡片下過長 */
     height: 44px;
     margin: 14px auto 0;
     background: var(--card-bg);

@@ -17,8 +17,8 @@
     background: var(--card-bg);
     border: var(--card-border);
     border-radius: 24px;
-    width: 90%;
-    max-width: max(450px, 33vw); /* 大螢幕依視窗佔比放大（33vw 在 1366px 寬時 ≈ 原本 450px） */
+    width: min(max(90%, 50vw), 700px); /* 依視窗佔比放大：50vw，小螢幕維持 90%，大螢幕 700px 封頂 */
+    max-width: calc(100% - 40px); /* 極窄螢幕仍保留左右間距 */
     padding: 2rem;
     backdrop-filter: blur(20px);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
