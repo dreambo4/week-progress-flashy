@@ -42,7 +42,7 @@ async function fetchWeather() {
         updateSolarAngle();
         if (!weatherConfig.bgEnabled && !weatherConfig.infoEnabled && !notiConfig.weatherAlert) return;
         try {
-            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,relative_humidity_2m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto`);
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,relative_humidity_2m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto&models=jma_seamless,best_match`);
             const data = await response.json();
             currentWeatherData = data;
             const newCode = data.current.weather_code;
@@ -95,8 +95,8 @@ function applyWeatherEffects() {
             const temp = currentWeatherData.current.temperature_2m;
             const code = currentWeatherData.current.weather_code;
             const humidity = currentWeatherData.current.relative_humidity_2m;
-            const sunrise = currentWeatherData.daily.sunrise[0].split('T')[1];
-            const sunset = currentWeatherData.daily.sunset[0].split('T')[1];
+            const sunrise = currentWeatherData.daily.sunrise_jma_seamless[0].split('T')[1];
+            const sunset = currentWeatherData.daily.sunset_jma_seamless[0].split('T')[1];
             if (weatherEmoji) weatherEmoji.textContent = getWeatherEmoji(code);
             if (weatherTemp) weatherTemp.textContent = `${temp}°C`;
             if (sunriseTime) sunriseTime.textContent = sunrise;
@@ -182,7 +182,7 @@ function renderWeatherModal() {
         entries.forEach(({ t, i }) => {
             const h = parseInt(t.slice(11, 13), 10);
             const isNow = i === startIdx;
-            const popVal = hourly.precipitation_probability ? hourly.precipitation_probability[i] : null;
+            const popVal = hourly.precipitation_probability_best_match ? hourly.precipitation_probability_best_match[i] : null;
             const cell = document.createElement('div');
             cell.className = 'wf-hour' + (isNow ? ' now' : '');
             // 降雨機率水位：格子底部填水，水面高度 = 機率，波紋動畫由 CSS 產生
@@ -198,10 +198,10 @@ function renderWeatherModal() {
             time.textContent = isNow ? '現在' : (h === 0 ? '明天' : `${h}時`);
             const emoji = document.createElement('span');
             emoji.className = 'wf-hour-emoji';
-            emoji.textContent = getWeatherEmoji(hourly.weather_code[i]);
+            emoji.textContent = getWeatherEmoji(hourly.weather_code_jma_seamless[i]);
             const temp = document.createElement('span');
             temp.className = 'wf-hour-temp';
-            temp.textContent = `${Math.round(hourly.temperature_2m[i])}°`;
+            temp.textContent = `${Math.round(hourly.temperature_2m_jma_seamless[i])}°`;
             const pop = document.createElement('span');
             pop.className = 'wf-hour-pop';
             pop.textContent = fmtPop(popVal);
@@ -212,7 +212,7 @@ function renderWeatherModal() {
 
     // 未來 7 天（含今天）：星期、天氣、降雨機率、低/高溫
     dailyList.textContent = '';
-    if (daily && daily.time && daily.weather_code) {
+    if (daily && daily.time && daily.weather_code_jma_seamless) {
         const weekNames = ['日', '一', '二', '三', '四', '五', '六'];
         daily.time.forEach((d, i) => {
             const date = new Date(`${d}T00:00:00`);
@@ -226,18 +226,18 @@ function renderWeatherModal() {
             dateEl.textContent = `${date.getMonth() + 1}/${date.getDate()}`;
             const emoji = document.createElement('span');
             emoji.className = 'wf-day-emoji';
-            emoji.textContent = getWeatherEmoji(daily.weather_code[i]);
+            emoji.textContent = getWeatherEmoji(daily.weather_code_jma_seamless[i]);
             const pop = document.createElement('span');
             pop.className = 'wf-day-pop';
-            pop.textContent = fmtPop(daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : null);
+            pop.textContent = fmtPop(daily.precipitation_probability_max_best_match ? daily.precipitation_probability_max_best_match[i] : null);
             const temp = document.createElement('span');
             temp.className = 'wf-day-temp';
             const lo = document.createElement('span');
             lo.className = 'wf-temp-lo';
-            lo.textContent = `${Math.round(daily.temperature_2m_min[i])}°`;
+            lo.textContent = `${Math.round(daily.temperature_2m_min_jma_seamless[i])}°`;
             const hi = document.createElement('span');
             hi.className = 'wf-temp-hi';
-            hi.textContent = `${Math.round(daily.temperature_2m_max[i])}°`;
+            hi.textContent = `${Math.round(daily.temperature_2m_max_jma_seamless[i])}°`;
             temp.append(lo, document.createTextNode(' / '), hi);
             li.append(day, dateEl, emoji, pop, temp);
             dailyList.appendChild(li);
