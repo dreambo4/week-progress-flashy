@@ -42,7 +42,7 @@ async function fetchWeather() {
         updateSolarAngle();
         if (!weatherConfig.bgEnabled && !weatherConfig.infoEnabled && !notiConfig.weatherAlert) return;
         try {
-            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,relative_humidity_2m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto&models=jma_seamless`);
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,relative_humidity_2m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto`);
             const data = await response.json();
             currentWeatherData = data;
             const newCode = data.current.weather_code;
