@@ -132,16 +132,34 @@
 }
 
 
+/* 天氣卡 + 節氣卡並列容器：各佔一半；某張卡隱藏時，另一張自動撐滿整行 */
+.info-cards {
+    display: flex;
+    gap: 15px;
+    margin-top: 1.5rem;
+    align-items: stretch;
+}
+.info-cards > .weather-dashboard,
+.info-cards > .solarterm-card {
+    flex: 1 1 0;
+    min-width: 0;
+    margin-top: 0;
+}
+/* 並列時天氣卡寬度砍半：左欄 emoji 疊溫度、右欄日出日落直排，整組置中 */
+.info-cards > .weather-dashboard {
+    padding: 1.1rem 1.3rem;
+    gap: 18px;
+}
+
 /* Weather Dashboard */
 .weather-dashboard {
-    margin-top: 1.5rem;
     padding: 1.2rem 1.5rem;
     background: rgba(255, 255, 255, 0.03);
     border-radius: 20px;
     border: var(--card-border);
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 20px;
     animation: fade-in 0.5s ease-out;
 }
@@ -150,34 +168,38 @@
 
 .weather-main {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 4px;
+    flex: 0 0 auto;
 }
 
 .weather-emoji {
-    font-size: clamp(2rem, 8vw, 2.8rem);
+    font-size: clamp(1.9rem, 6vw, 2.3rem);
     filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
 }
 
 .weather-temp {
-    font-size: clamp(1.5rem, 6vw, 2.2rem);
+    font-size: clamp(1.3rem, 4.5vw, 1.6rem);
     font-weight: 800;
     color: var(--primary-color);
+    white-space: nowrap;
 }
 
 .weather-details {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    text-align: right;
 }
 
+/* 「日出 05:17」標籤與數值相鄰靠左，三行直排（對齊示意圖）*/
 .weather-detail-item {
     display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.7rem;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
 }
 
 .detail-label {
@@ -194,6 +216,170 @@
 /* 天氣區塊可點擊（開啟天氣預報 Modal） */
 .weather-dashboard { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
 .weather-dashboard:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
+
+/* 24 節氣卡（不依賴天氣）：上排 emoji+節氣名+天數，下排迷你進度條。
+   並列時與天氣卡各半；天氣卡隱藏時自動撐滿整行變橫條 */
+.solarterm-card {
+    padding: 1.2rem 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    border: var(--card-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    animation: fade-in 0.5s ease-out;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.solarterm-card:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
+/* 上排：emoji + 文字，整組置中 */
+.st-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+.st-card-emoji {
+    font-size: clamp(1.6rem, 6vw, 2rem);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+}
+/* emoji+文字整組在卡片內置中，但文字兩行各自靠左對齊 */
+.st-card-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.st-card-name {
+    font-size: clamp(1rem, 4.5vw, 1.25rem);
+    font-weight: 800;
+    color: var(--primary-color);
+    letter-spacing: 1px;
+}
+.st-card-next { font-size: 0.72rem; opacity: 0.6; font-weight: 600; }
+
+/* 下排：迷你進度條（當前節氣 → 下個節氣）
+   最大寬約 85%（大致對齊左邊天氣卡內容寬度）、置中；最小寬不限，靠 flex 自然縮 */
+.st-card-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 85%;
+    margin: 0 auto;
+}
+.st-cp-label {
+    font-size: 0.62rem;
+    opacity: 0.55;
+    font-weight: 600;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+.st-cp-track {
+    flex: 1 1 auto;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+.st-cp-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 3px;
+    background: linear-gradient(to right, var(--secondary-color, var(--primary-color)), var(--primary-color));
+    box-shadow: 0 0 6px var(--primary-color);
+    transition: width 0.4s ease;
+}
+
+/* 節氣 Modal 頂部當前節氣摘要 */
+.st-current {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 4px 2px 12px;
+    flex-wrap: wrap;
+}
+.st-cur-emoji { font-size: 1.8rem; }
+.st-cur-name { font-size: 1.5rem; font-weight: 800; color: var(--primary-color); }
+.st-cur-sub { font-size: 0.8rem; opacity: 0.6; font-weight: 600; }
+
+/* 24 節氣時間軸：節氣名在上、圓點串在橫線上、日期在下 */
+.st-timeline {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 4px 6px 2px;
+    margin: 2px 0 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+/* 貫穿所有 emoji 底座中心的橫線（底座約在 name 高度 + 自身半徑處）*/
+.st-line {
+    position: absolute;
+    left: 18px; right: 18px;
+    top: 32px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.15);
+    z-index: 0;
+}
+.st-node {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 0;
+    min-width: 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-align: center;
+}
+.st-name {
+    font-size: 0.72rem;
+    opacity: 0.55;
+    white-space: nowrap;
+    font-weight: 600;
+}
+/* emoji 底座：圓形背景，emoji 由內層 .st-glyph 絕對定位釘死圓心 */
+.st-dot {
+    box-sizing: border-box;
+    position: relative;
+    width: 32px; height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    opacity: 0.55;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+/* emoji 字符：絕對置中。emoji 字形在文字盒內天生偏上（glyph box 高於 font-size），
+   盒子置中後仍視覺偏上，故 Y 方向多補一個相對字級的微調（約 0.08em）壓回視覺正中 */
+.st-glyph {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, calc(-50% + 0.08em));
+    font-size: 1rem;
+    line-height: 1;
+}
+.st-date {
+    font-size: 0.65rem;
+    opacity: 0.4;
+    white-space: nowrap;
+}
+/* 當前節氣：名稱亮起、底座放大帶主題色高亮框與光暈、日期加深。
+   邊框寬度維持 2px（與非當前一致）避免 box 尺寸變化把 emoji 擠偏 */
+.st-node.current .st-name { opacity: 1; color: var(--primary-color); font-weight: 700; }
+/* 當前底座：改用「更大固定尺寸」而非 scale 放大，
+   避免 scale 縮放座標系把內層 glyph 的絕對定位/補償一起放大而偏移 */
+.st-node.current .st-dot {
+    width: 38px; height: 38px;
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px var(--primary-color);
+}
+/* 底座變大，emoji 同步放大填滿（font-size 放大，0.08em 補償等比跟隨）*/
+.st-node.current .st-glyph { font-size: 1.2rem; }
+.st-node.current .st-date { opacity: 0.75; font-weight: 700; }
 
 /* 天氣預報 Modal */
 .wf-body { max-height: min(62vh, 540px); overflow-y: auto; }
@@ -306,6 +492,11 @@
 
 /* RWD */
 @media (max-width: 480px) {
+    /* 小螢幕並列太擠 → 天氣卡與節氣卡改上下堆疊 */
+    .info-cards {
+        flex-direction: column;
+        gap: 12px;
+    }
     .weather-dashboard {
         flex-direction: row;
         padding: 1rem;
