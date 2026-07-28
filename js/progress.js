@@ -151,6 +151,7 @@ function updateProgress() {
     }
     if (pBar) pBar.style.width = perc + '%';
     if (pText) pText.textContent = perc.toFixed(4) + '%';
+    if (typeof setFaviconProgress === 'function') setFaviconProgress(perc);
     const fmtSec = (s) => `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m ${s % 60}s`;
     const isLunch = selectedDays.includes(curDay) && curSec >= lStart && curSec < lEnd;
     const tLabel = document.getElementById('timeLeftLabel');
