@@ -100,6 +100,15 @@ h1 .title-emoji { background: none; -webkit-text-fill-color: initial; }
     margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1px;
 }
 .info-value { font-size: clamp(0.9rem, 4vw, 1.2rem); font-weight: 700; }
+/* 剩餘時間沒有下方小字，字級放大並下推，與右側狀態框的大字視覺齊高。
+   下推量約為 .info-sub 佔用高度（行高 ~1.05rem + 間距 0.3rem）的一半。 */
+#timeLeft { font-size: clamp(1.15rem, 5.4vw, 1.6rem); margin-top: 0.65rem; }
+/* 狀態框內的日期小字（國曆 + 農曆）；農曆缺漏時僅顯示國曆 */
+.info-sub {
+    font-size: 0.7rem; color: var(--text-color); opacity: 0.55;
+    margin-top: 0.3rem; letter-spacing: 0.5px;
+}
+.info-sub:empty { display: none; }
 
 
 /* Celebration Mode */
@@ -110,4 +119,6 @@ body.celebration-mode { animation: bg-rainbow 10s infinite linear; }
 @media (max-width: 480px) {
     .container { padding: 1.5rem; }
     .info-grid { grid-template-columns: 1fr; }
+    /* 單欄堆疊時兩框不再並排，毋須補高度差，下推會變成多餘空隙 */
+    #timeLeft { margin-top: 0; }
 }

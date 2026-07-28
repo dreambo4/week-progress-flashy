@@ -103,6 +103,20 @@ function checkMilestones(percentage, now, todayWorkEnd) {
     }
 }
 
+// 狀態框的日期小字：「7/28 (農 六月十五)」。農曆算不出就只顯示國曆。
+// updateProgress 每秒呼叫，故以日期字串比對，跨日才真正重算並寫入 DOM。
+let lastDateKey = '';
+function updateDateLine(now) {
+    const elem = document.getElementById('currentDate');
+    if (!elem) return;
+    const key = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
+    if (key === lastDateKey) return;
+    lastDateKey = key;
+    const solar = `${now.getMonth() + 1}/${now.getDate()}`;
+    const lunar = (typeof Lunar !== 'undefined') ? Lunar.getLunarDate(now) : null;
+    elem.textContent = lunar ? `${solar} (農 ${lunar.text})` : solar;
+}
+
 function updateProgress() {
     const now = new Date(), curDay = now.getDay();
     const wStart = parseTimeToSec(timeConfig.workStart), wEnd = parseTimeToSec(timeConfig.workEnd);
@@ -161,5 +175,6 @@ function updateProgress() {
     if (petContainer) petContainer.classList.toggle('napping', isLunch && petHunger > 0 && !window.dinoGameActive);
     const dayNames = ['週日 SUNDAY', '週一 MONDAY', '週二 TUESDAY', '週三 WEDNESDAY', '週四 THURSDAY', '週五 FRIDAY', '週六 SATURDAY'];
     if (dLabel) dLabel.textContent = dayNames[curDay];
+    updateDateLine(now);
     updateQuote();
 }
