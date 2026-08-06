@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="css/base.css?t=202607281058">
     <link rel="stylesheet" href="css/modal.css?t=202607171030">
     <link rel="stylesheet" href="css/menu.css?t=202607171030">
-    <link rel="stylesheet" href="css/weather.css?t=202607241117">
+    <link rel="stylesheet" href="css/weather.css?t=202608061014">
     <link rel="stylesheet" href="css/pet.css?t=202607161423">
     <link rel="stylesheet" href="css/game.css?t=202607161423">
     <link rel="stylesheet" href="css/leaderboard.css?t=202607161423">
@@ -280,7 +280,22 @@
             </div>
             <div class="modal-body">
                 <div class="st-current" id="stCurrent"></div>
-                <!-- 前後節氣時間軸：小圓點、當前實心高亮，由 JS 佈點 -->
+                <!-- 年度總覽條：主題色填到今天，3 個刻度均分四季，游標標當前位置（寬度由 JS 填）-->
+                <div class="st-year" id="stYear" style="display: none;">
+                    <div class="st-year-track">
+                        <div class="st-year-fill" id="stYearFill"></div>
+                        <!-- 刻度與游標另包一層，定位基準才與填充寬度一致（軌道有內距）-->
+                        <div class="st-year-marks">
+                            <span class="st-year-tick" style="left: 25%;"></span>
+                            <span class="st-year-tick" style="left: 50%;"></span>
+                            <span class="st-year-tick" style="left: 75%;"></span>
+                            <span class="st-year-cursor" id="stYearCursor"></span>
+                        </div>
+                    </div>
+                    <div class="st-year-seasons"><span>春</span><span>夏</span><span>秋</span><span>冬</span></div>
+                </div>
+                <!-- 整輪 24 節氣（立春起算）：6 個一排共 4 排（一排一季），
+                     已過亮起／當前發光／未來灰階，由 JS 佈點 -->
                 <div class="st-timeline" id="stTimeline" style="display: none;"></div>
             </div>
         </div>
@@ -338,7 +353,7 @@
     <script src="js/lunar.js?t=202607281058"></script>
     <script src="js/progress.js?t=202607281058"></script>
     <script src="js/notifications.js?t=202607161423"></script>
-    <script src="js/solarterm.js?t=202607241117"></script>
+    <script src="js/solarterm.js?t=202608061014"></script>
     <script src="js/weather.js?t=202607241130"></script>
     <script src="js/pet.js?t=202607161423"></script>
     <script src="js/main.js?t=202607161423"></script>

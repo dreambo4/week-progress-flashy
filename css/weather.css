@@ -288,6 +288,89 @@
     transition: width 0.4s ease;
 }
 
+/* 四季輔助色：色相不隨主題切換（節氣的季節屬性是固定的，跟著主題變會失去辨識度），
+   但亮度要跟著底色走 —— 這組是為暗底調的，在 minimal/flow 等亮底主題上對比不足，
+   故亮底主題另行加深（見下方 [data-theme] 覆寫）。
+   只用在細線與節點邊框等小面積，避免大色塊破壞玻璃擬態 */
+:root {
+    --st-season-0: #6ee7a8; /* 春 */
+    --st-season-1: #ff7a59; /* 夏 */
+    --st-season-2: #f5c26b; /* 秋 */
+    --st-season-3: #7cc4ff; /* 冬 */
+    /* 四季刻度：混文字色，暗底得到淺色、亮底得到深色，壓在填充上都看得見 */
+    --st-tick: color-mix(in srgb, var(--text-color) 45%, transparent);
+}
+/* 亮底主題：四季色改用同色相的深色版，確保線與邊框在白底上看得見 */
+[data-theme="flow"], [data-theme="minimal"] {
+    --st-season-0: #1a9e5f; /* 春 */
+    --st-season-1: #d94f2b; /* 夏 */
+    --st-season-2: #b8862b; /* 秋 */
+    --st-season-3: #2b7fc4; /* 冬 */
+}
+
+/* 節氣 Modal 頂部年度總覽條：一眼看出整年走了多少。
+   軌道與填充直接沿用首頁 .progress-wrapper / .progress-bar 的配色規則
+   （--bar-bg + secondary→primary 漸層 + --glow），八個主題的適配由既有變數承接，
+   只在尺寸上縮成細條版 */
+.st-year { margin: 2px 0 16px; }
+.st-year-track {
+    position: relative;
+    height: 10px;
+    border-radius: 6px;
+    background: var(--bar-bg);
+    border: var(--card-border);
+    box-sizing: border-box;
+    padding: 2px;
+}
+.st-year-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    box-shadow: var(--glow);
+    transition: width 0.5s cubic-bezier(0.1, 0.7, 0.1, 1);
+}
+/* 刻度與游標的定位基準層：撐滿軌道的內容區（padding box），
+   讓 left:25% 這類百分比與 .st-year-fill 的寬度基準完全一致 */
+.st-year-marks {
+    position: absolute;
+    left: 2px; right: 2px; top: 0; bottom: 0;
+    pointer-events: none;
+}
+/* 四季分界刻度：壓在軌道上把整條均分四段。
+   混文字色而非寫死黑色，才能同時在填充色與空軌道上看得見 */
+.st-year-tick {
+    position: absolute;
+    top: 50%;
+    width: 2px; height: 10px;
+    margin-top: -5px;
+    border-radius: 1px;
+    background: var(--st-tick);
+    z-index: 1;
+}
+/* 當前位置游標：主題色圓點 + 底色描邊，確保壓在填充色上仍分得出來 */
+.st-year-cursor {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 12px; height: 12px;
+    margin: -6px 0 0 -6px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    box-shadow: var(--glow), 0 0 0 2.5px var(--bar-bg);
+    z-index: 2;
+    transition: left 0.5s cubic-bezier(0.1, 0.7, 0.1, 1);
+}
+.st-year-seasons {
+    display: flex;
+    margin-top: 7px;
+    font-size: 0.62rem;
+    opacity: 0.45;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+.st-year-seasons span { flex: 1 1 0; text-align: center; }
+
 /* 節氣 Modal 頂部當前節氣摘要 */
 .st-current {
     display: flex;
@@ -300,32 +383,54 @@
 .st-cur-name { font-size: 1.5rem; font-weight: 800; color: var(--primary-color); }
 .st-cur-sub { font-size: 0.8rem; opacity: 0.6; font-weight: 600; }
 
-/* 24 節氣時間軸：節氣名在上、圓點串在橫線上、日期在下 */
+/* 24 節氣時間軸：整輪 24 個節氣，6 個一排共 4 排（由 JS 切排），
+   每排內節氣名在上、圓點串在該排橫線上、日期在下 */
 .st-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 4px 6px 2px;
+    margin: 2px 0 4px;
+}
+/* 單排 = 一季：6 個節點平均分佈，橫線相對此排絕對定位。
+   --st-season 由 JS 依排序（0春 1夏 2秋 3冬）設定 */
+.st-row {
     position: relative;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 2px;
-    padding: 4px 6px 2px;
-    margin: 2px 0 4px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    padding-left: 16px; /* 讓出左緣季節字（水平正放）的寬度，避免壓到第一個節氣 */
 }
-/* 貫穿所有 emoji 底座中心的橫線（底座約在 name 高度 + 自身半徑處）*/
+/* 貫穿該排所有 emoji 底座中心的橫線（底座約在 name 高度 + 自身半徑處），
+   染上該季的輔助色但壓低透明度，只當暗示不搶焦點 */
 .st-line {
     position: absolute;
-    left: 18px; right: 18px;
+    left: 32px; right: 18px;
     top: 32px;
     height: 2px;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--st-season, rgba(255, 255, 255, 0.15));
+    opacity: 0.35;
     z-index: 0;
+}
+/* 排左緣的季節字：水平正放（不旋轉），用最低視覺成本標出四季段落。
+   色相取該季輔助色但混入文字色壓深，確保亮底主題也讀得到 */
+.st-season-tag {
+    position: absolute;
+    left: -2px;
+    top: 32px;
+    transform: translateY(-50%);
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: color-mix(in srgb, var(--st-season) 65%, var(--text-color));
+    opacity: 0.9;
+    pointer-events: none;
 }
 .st-node {
     position: relative;
     z-index: 1;
     flex: 1 1 0;
-    min-width: 44px;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -365,8 +470,23 @@
     opacity: 0.4;
     white-space: nowrap;
 }
+/* 已過的節氣：亮起 + 該季輔助色邊框，形成「走過的路」 */
+.st-node.past .st-dot {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--st-season, rgba(255, 255, 255, 0.12));
+}
+.st-node.past .st-name { opacity: 0.85; }
+.st-node.past .st-date { opacity: 0.55; }
+/* 未來的節氣：灰階 + 壓低透明度，明顯退到背景去 */
+.st-node.future .st-dot { opacity: 0.3; }
+.st-node.future .st-name { opacity: 0.3; }
+.st-node.future .st-date { opacity: 0.22; }
+.st-node.future .st-glyph { filter: grayscale(1); }
+
 /* 當前節氣：名稱亮起、底座放大帶主題色高亮框與光暈、日期加深。
-   邊框寬度維持 2px（與非當前一致）避免 box 尺寸變化把 emoji 擠偏 */
+   邊框寬度維持 2px（與非當前一致）避免 box 尺寸變化把 emoji 擠偏。
+   主題色一律蓋過季節色，確保焦點不被季節色稀釋 */
 .st-node.current .st-name { opacity: 1; color: var(--primary-color); font-weight: 700; }
 /* 當前底座：改用「更大固定尺寸」而非 scale 放大，
    避免 scale 縮放座標系把內層 glyph 的絕對定位/補償一起放大而偏移 */
@@ -505,4 +625,21 @@
     .weather-details {
         gap: 4px;
     }
+    /* 節氣時間軸：一排 6 欄在窄螢幕會擠，整體縮一階（底座、字級、橫線位置同步） */
+    .st-timeline { gap: 10px; padding: 4px 0 2px; }
+    .st-row { padding-left: 13px; }
+    .st-line { left: 26px; right: 12px; top: 28px; }
+    .st-season-tag { top: 28px; left: -2px; font-size: 0.56rem; }
+    .st-dot { width: 26px; height: 26px; }
+    .st-glyph { font-size: 0.85rem; }
+    .st-node.current .st-dot { width: 30px; height: 30px; }
+    .st-node.current .st-glyph { font-size: 1rem; }
+    .st-name { font-size: 0.62rem; }
+    .st-date { font-size: 0.55rem; }
+    /* 年度總覽條同步縮一階 */
+    .st-year { margin-bottom: 13px; }
+    .st-year-track { height: 9px; }
+    .st-year-tick { height: 9px; margin-top: -4.5px; }
+    .st-year-cursor { width: 10px; height: 10px; margin: -5px 0 0 -5px; }
+    .st-year-seasons { font-size: 0.58rem; }
 }

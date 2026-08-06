@@ -92,9 +92,11 @@
         return list;
     }
 
-    // 取「連續」的節氣序列（跨年）：把 year-1、year、year+1 三年合併排序
+    // 取「連續」的節氣序列（跨年）：把 year-2 ~ year+1 四年合併排序。
+    // 注意 termsOfYear(y) 是「以春分為首」的一輪（立春/雨水/驚蟄實際落在 y+1 年初），
+    // 所以往前必須多墊一年，年初（立春前）回溯歲首時才不會撞到陣列開頭。
     function termsAround(year) {
-        return [].concat(termsOfYear(year - 1), termsOfYear(year), termsOfYear(year + 1))
+        return [].concat(termsOfYear(year - 2), termsOfYear(year - 1), termsOfYear(year), termsOfYear(year + 1))
             .sort((a, b) => a.date - b.date);
     }
 
@@ -159,6 +161,57 @@
         }
     }
 
+    // 取「完整一輪 24 節氣」：以今天所在節氣年的立春為起點，往後數滿 24 個。
+    // termsAround 涵蓋前後各一年（共 72 個），往前找立春最多 24 步，不會越界。失敗回 null。
+    function getYearSeries(now) {
+        try {
+            now = now || new Date();
+            const all = termsAround(now.getFullYear());
+            const t0 = dayFloor(now);
+            let curIdx = -1;
+            for (let i = 0; i < all.length; i++) {
+                if (dayFloor(all[i].date) <= t0) curIdx = i; else break;
+            }
+            if (curIdx < 0) return null;
+            // 往前回溯到最近的立春（節氣年歲首）
+            let start = -1;
+            for (let i = curIdx; i >= 0; i--) {
+                if (all[i].name === '立春') { start = i; break; }
+            }
+            if (start < 0 || start + 24 > all.length) return null;
+            const items = [];
+            for (let i = start; i < start + 24; i++) {
+                items.push(Object.assign(withEmoji(all[i]), {
+                    isCurrent: i === curIdx,
+                    isPast: i < curIdx,
+                    // 節氣年內的序號 0~23，除以 6 即為季節（0春 1夏 2秋 3冬）
+                    index: i - start
+                }));
+            }
+            return items;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // 一整個節氣年走完的比例 0~1：已過的整節氣數 + 當前節氣內比例，除以 24。
+    // 給 Modal 頂部的年度總覽條用。失敗回 null。
+    function getYearProgress(now) {
+        try {
+            const series = getYearSeries(now);
+            const info = getCurrent(now);
+            if (!series || !info) return null;
+            let idx = -1;
+            for (let i = 0; i < series.length; i++) {
+                if (series[i].isCurrent) { idx = i; break; }
+            }
+            if (idx < 0) return null;
+            return Math.max(0, Math.min(1, (idx + (info.progress || 0)) / 24));
+        } catch (e) {
+            return null;
+        }
+    }
+
     function withEmoji(term) {
         return { name: term.name, date: term.date, emoji: TERM_EMOJI[term.name] || '📅' };
     }
@@ -166,6 +219,8 @@
     window.SolarTerm = {
         getCurrent: getCurrent,
         getSeries: getSeries,
+        getYearSeries: getYearSeries,
+        getYearProgress: getYearProgress,
         emojiOf: (name) => TERM_EMOJI[name] || '📅'
     };
 
@@ -198,38 +253,70 @@
         card.style.display = 'flex';
     }
 
-    // 時間軸：前後節氣串成水平軸，每個節點是該節氣的 emoji 底座，
-    // 當前節氣底座高亮放大、下標日期。失敗就隱藏。
+    // 時間軸：以立春起算的一整輪 24 節氣，切成 6 個一排、共 4 排（一排 = 一季）。
+    // 每排掛自己的季節色（--st-season）給橫線與已過節點的邊框用，排左緣標季節字。
+    // 節點分三態：已過（亮起 + 季節色邊框）、當前（主題色發光放大）、未來（灰階半透明），
+    // 用明暗差直接表達「這一年走到哪」。失敗就隱藏。
+    const ROW_SIZE = 6;
+    const SEASON_NAMES = ['春', '夏', '秋', '冬'];
     function renderTimeline() {
         const box = document.getElementById('stTimeline');
         if (!box) return;
-        const series = getSeries(new Date(), 3, 3);
+        const series = getYearSeries(new Date());
         if (!series || series.length < 2) { box.style.display = 'none'; return; }
         box.textContent = '';
-        const line = document.createElement('div');
-        line.className = 'st-line';
-        box.appendChild(line);
-        series.forEach((t) => {
-            const node = document.createElement('div');
-            node.className = 'st-node' + (t.isCurrent ? ' current' : '');
-            const name = document.createElement('span');
-            name.className = 'st-name';
-            name.textContent = t.name;
-            // emoji 底座取代原本純圓點：每個節氣顯示自己的 emoji
-            // emoji 包內層 span 以絕對定位死釘圓心，避免字體 metrics 造成偏移
-            const dot = document.createElement('span');
-            dot.className = 'st-dot';
-            const glyph = document.createElement('span');
-            glyph.className = 'st-glyph';
-            glyph.textContent = t.emoji;
-            dot.appendChild(glyph);
-            const date = document.createElement('span');
-            date.className = 'st-date';
-            date.textContent = `${t.date.getMonth() + 1}/${t.date.getDate()}`;
-            node.append(name, dot, date);
-            box.appendChild(node);
-        });
+        for (let r = 0; r < series.length; r += ROW_SIZE) {
+            const seasonIdx = Math.floor(r / ROW_SIZE);
+            const row = document.createElement('div');
+            row.className = 'st-row';
+            // 該排的季節色，供 .st-line 與已過節點的 border-color 繼承
+            row.style.setProperty('--st-season', `var(--st-season-${seasonIdx})`);
+            const line = document.createElement('div');
+            line.className = 'st-line';
+            row.appendChild(line);
+            const tag = document.createElement('span');
+            tag.className = 'st-season-tag';
+            tag.textContent = SEASON_NAMES[seasonIdx] || '';
+            row.appendChild(tag);
+            series.slice(r, r + ROW_SIZE).forEach((t) => {
+                const node = document.createElement('div');
+                const state = t.isCurrent ? ' current' : (t.isPast ? ' past' : ' future');
+                node.className = 'st-node' + state;
+                const name = document.createElement('span');
+                name.className = 'st-name';
+                name.textContent = t.name;
+                // emoji 底座取代原本純圓點：每個節氣顯示自己的 emoji
+                // emoji 包內層 span 以絕對定位死釘圓心，避免字體 metrics 造成偏移
+                const dot = document.createElement('span');
+                dot.className = 'st-dot';
+                const glyph = document.createElement('span');
+                glyph.className = 'st-glyph';
+                glyph.textContent = t.emoji;
+                dot.appendChild(glyph);
+                const date = document.createElement('span');
+                date.className = 'st-date';
+                date.textContent = `${t.date.getMonth() + 1}/${t.date.getDate()}`;
+                node.append(name, dot, date);
+                row.appendChild(node);
+            });
+            box.appendChild(row);
+        }
         box.style.display = 'flex';
+    }
+
+    // Modal 頂部的年度總覽條：主題色填到今天的位置，3 個刻度把整條均分四季，
+    // 游標釘在當前位置。純比例圖形，不放百分比數字。算不出就隱藏整條。
+    function renderYearBar() {
+        const bar = document.getElementById('stYear');
+        if (!bar) return;
+        const p = getYearProgress();
+        if (p == null) { bar.style.display = 'none'; return; }
+        const pct = (p * 100).toFixed(1) + '%';
+        const fill = document.getElementById('stYearFill');
+        const cursor = document.getElementById('stYearCursor');
+        if (fill) fill.style.width = pct;
+        if (cursor) cursor.style.left = pct;
+        bar.style.display = 'block';
     }
 
     // Modal 頂部的「當前節氣」大字摘要
@@ -257,6 +344,7 @@
         const modal = document.getElementById('solarTermModal');
         if (!modal) return;
         renderModalCurrent();
+        renderYearBar();
         renderTimeline();
         modal.classList.add('active');
         if (typeof gtag === 'function') gtag('event', 'solarterm_modal_open');
