@@ -28,6 +28,8 @@
     let obs = [], speed, dist, runTime, typeHist, hiScore;
     let dinoY, dinoVy, ducking, speedDrop, downHeld, crashedAt;
     let pet, container, statusEl, groundBottom, dinoGX, viewW;
+    let roundCount = 0; // 本次開啟已玩完的場次（每次 gameover +1，enter 時歸零）
+    let closeLogged = false; // 本次開啟是否已送出 minigame_close，避免切走再離開重複計數
 
     function isActive() { return layer !== null; }
 
@@ -40,6 +42,8 @@
         statusEl = document.getElementById('petStatus');
         if (!pet || !container) return;
         window.dinoGameActive = true;
+        roundCount = 0;
+        closeLogged = false;
         document.body.classList.add('inline-game-mode');
         hiScore = parseInt(localStorage.getItem('dino-runner-hi') || '0', 10);
         // 恐龍滑到左側起跑點、面向右
@@ -185,7 +189,8 @@
         if (sc > hiScore) { hiScore = sc; localStorage.setItem('dino-runner-hi', String(hiScore)); }
         if (window.Leaderboard) window.Leaderboard.submitScore(sc); // 雲端排行榜（未綁定時內部直接 return）
         if (statusEl) statusEl.textContent = 'GAME OVER！' + sc + ' 分・空白鍵再來・✕ 離開';
-        if (typeof gtag === 'function') gtag('event', 'minigame_gameover', { score: sc, hi_score: hiScore, mode: 'inline' });
+        roundCount++;
+        if (typeof gtag === 'function') gtag('event', 'minigame_gameover', { score: sc, hi_score: hiScore, round: roundCount, mode: 'inline' });
     }
 
     function step(dt) {
@@ -267,8 +272,27 @@
         container.style.left = (typeof petPos !== 'undefined' ? petPos : 50) + '%';
         window.dinoGameActive = false;
         if (typeof updatePetStatus === 'function') { isAnnouncing = false; updatePetStatus(); }
-        if (typeof gtag === 'function') gtag('event', 'minigame_close', { score: getScore(dist || 0), hi_score: hiScore, mode: 'inline' });
+        logClose('exit');
     }
+
+    // 送出 minigame_close。使用者直接關分頁／切走 App 時不會呼叫 exit()，
+    // 因此另在 visibilitychange 補送一次，用 closeLogged 確保一次開啟只計一筆。
+    function logClose(reason) {
+        if (closeLogged) return;
+        closeLogged = true;
+        if (typeof gtag === 'function') {
+            gtag('event', 'minigame_close', {
+                score: getScore(dist || 0), hi_score: hiScore,
+                rounds: roundCount, reason: reason, mode: 'inline'
+            });
+        }
+    }
+
+    // 分頁隱藏是行動裝置唯一可靠的「離開」時機（beforeunload 在 iOS/Android 常不觸發）。
+    // 這裡只補送統計，不呼叫 exit()——使用者切回來時遊戲要還在。
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && layer) logClose('hidden');
+    });
 
     window.DinoRunner = { open: enter, close: exit, isActive: isActive };
 })();
