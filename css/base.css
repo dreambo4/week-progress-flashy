@@ -14,12 +14,19 @@ body {
     color: var(--text-color);
     min-height: 100vh;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
     overflow-x: hidden;
-    /* 底部留出小恐龍區（.pet-area 高 180px）的空間，捲到底時內容不被恐龍與按鈕遮住 */
-    padding: 20px 20px 180px;
+    padding: 20px 20px 0;
 }
+
+/* 卡片上下的彈性空白：空間夠時卡片在整個視窗置中（下方基準 20px 對應上方內距）；
+   空間不足時卡片往上讓位，內容超出視窗時捲到底也留出同樣空間。
+   下方至少保留小恐龍整組（泡泡＋恐龍＋按鈕，約 185px，再加 10px 間距）扣掉卡片底部內距的高度：
+   泡泡可以疊到卡片底部留白，但不會蓋到卡片內容 */
+body::before, body::after { content: ''; }
+body::before { flex: 1 0 0; }
+body::after { flex: 1 0 20px; min-height: calc(195px - clamp(1.5rem, 5vw, 2.5rem)); }
 
 
 .scanlines {
