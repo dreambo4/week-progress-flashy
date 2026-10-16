@@ -17,7 +17,8 @@ body {
     justify-content: center;
     align-items: center;
     overflow-x: hidden;
-    padding: 20px;
+    /* 底部留出小恐龍區（.pet-area 高 180px）的空間，捲到底時內容不被恐龍與按鈕遮住 */
+    padding: 20px 20px 180px;
 }
 
 
