@@ -125,16 +125,19 @@
     // ===== 年度時間軸（今天 → +365 天，依比例佈點）=====
     const TL_DAYS = 365;
 
-    function renderTimeline(y, today) {
+    // anniv：到職週年日（Tenure.getAnniversary()），沒有時為 null
+    function renderTimeline(y, today, anniv) {
         const area = document.getElementById('calTimeline');
         const legend = document.getElementById('calTlLegend');
         if (!area) return;
         area.textContent = '';
-        const show = y.holidays.length || y.workdays.length;
+        const show = y.holidays.length || y.workdays.length || anniv;
         area.style.display = show ? '' : 'none';
         if (legend) legend.style.display = show ? '' : 'none';
         const lgMakeup = document.getElementById('calTlLegendMakeup');
         if (lgMakeup) lgMakeup.style.display = y.workdays.length ? '' : 'none'; // 一年內沒補班就不擺圖例
+        const lgAnniv = document.getElementById('calTlLegendAnniv');
+        if (lgAnniv) lgAnniv.style.display = anniv ? '' : 'none';
         if (!show) return;
 
         const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
@@ -166,6 +169,7 @@
         el('tl-today-label', 0, '今天');
 
         // 連假：線上區段 + 上方 emoji（兩排交錯，避免相鄰連假擠在一起）
+        const emojiPos = [[], []]; // 各排 emoji 的位置（%），給週年日挑比較空的那排
         y.holidays.forEach((h, i) => {
             const a = pct(TW.parseYmd(h.start).getTime());
             const b = pct(TW.parseYmd(h.end).getTime() + 86400000); // 含 end 當天整天
@@ -177,6 +181,7 @@
             seg.title = tip;
             const em = el('tl-emoji' + (i % 2 ? ' tl-row2' : ''), (a + b) / 2, goalEmoji(h.name));
             em.title = tip;
+            emojiPos[i % 2].push((a + b) / 2);
         });
 
         // 補班：線下小標記
@@ -184,6 +189,19 @@
             el('tl-makeup', pct(TW.parseYmd(w.date).getTime()))
                 .title = `補班 ${fmtDate(w.date)} ${weekLabel(w.date)}`;
         });
+
+        // 到職週年：線上菱形標記（固定色，與連假區段區隔）+ 💼，放在離最近 emoji 較遠的那一排
+        if (anniv) {
+            const p = pct(anniv.date.getTime());
+            const tip = `${annivName(anniv)} ${fmtDate(TW.ymd(anniv.date))} ${weekLabel(TW.ymd(anniv.date))}`;
+            el('tl-anniv', p).title = tip;
+            const gap = (row) => Math.min(Infinity, ...emojiPos[row].map(x => Math.abs(x - p)));
+            el('tl-emoji' + (gap(1) > gap(0) ? ' tl-row2' : ''), p, '💼').title = tip;
+        }
+    }
+
+    function annivName(anniv) {
+        return `到職日${anniv.years}週年`;
     }
 
     // ===== 連假清單 Modal =====
@@ -193,7 +211,9 @@
         if (!modal || !list || !analysis) return;
         const today = new Date();
         const y = TW.withinYear(analysis, today);
-        renderTimeline(y, today);
+        // 到職週年日只在清單與時間軸出現，不進 analysis，吃豆豆橫條的倒數不受影響
+        const anniv = (window.Tenure && window.Tenure.getAnniversary()) || null;
+        renderTimeline(y, today, anniv);
         list.textContent = '';
 
         const addHeader = (t) => {
@@ -206,7 +226,26 @@
         if (!y.holidays.length) {
             const li = document.createElement('li'); li.className = 'cal-empty'; li.textContent = '一年內沒有連假'; list.appendChild(li);
         }
+        // 到職週年列：依日期插在連假之間，排在同一天開始的連假後面
+        const annivYmd = anniv ? TW.ymd(anniv.date) : null;
+        const addAnnivRow = () => {
+            const li = document.createElement('li');
+            li.className = 'cal-row cal-anniv';
+            const name = document.createElement('span');
+            name.className = 'cal-name';
+            name.textContent = `💼 ${annivName(anniv)}`;
+            const range = document.createElement('span');
+            range.className = 'cal-range';
+            range.textContent = `${fmtDate(annivYmd)} ${weekLabel(annivYmd)}`;
+            const cd = document.createElement('span');
+            cd.className = 'cal-count';
+            cd.textContent = anniv.isToday ? '就是今天' : countdownLabel(today, annivYmd, annivYmd);
+            li.append(name, range, cd);
+            list.appendChild(li);
+        };
+        let annivPending = !!anniv;
         y.holidays.forEach(h => {
+            if (annivPending && annivYmd < h.start) { addAnnivRow(); annivPending = false; }
             const li = document.createElement('li');
             li.className = 'cal-row';
             const name = document.createElement('span');
@@ -223,6 +262,7 @@
             li.append(name, range, cd);
             list.appendChild(li);
         });
+        if (annivPending) addAnnivRow();
 
         if (y.workdays.length) {
             addHeader('😮‍💨 補班日');

@@ -16,6 +16,7 @@ fetchWeather();
 setInterval(() => {
     updateProgress();
     updateSolarAngle();
+    Tenure.render(); // 內容沒變不動 DOM，跨日才重繪
 }, 1000);
 setInterval(fetchWeather, 30 * 60 * 1000);
 

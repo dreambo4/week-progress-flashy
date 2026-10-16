@@ -36,15 +36,16 @@
       }
     </script>
     <link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect x=%220%22 y=%220%22 width=%2216%22 height=%2216%22 rx=%224%22 fill=%22%230f172a%22/><rect x=%222%22 y=%2212%22 width=%2212%22 height=%222%22 rx=%221%22 fill=%22%23334155%22/><rect x=%222%22 y=%2212%22 width=%227%22 height=%222%22 rx=%221%22 fill=%22%2300f2fe%22/><path d=%22M 9,3 L 13,3 L 13,5 L 11,5 L 11,6 L 12,6 L 12,7 L 10,7 L 10,9 L 9,9 L 9,11 L 7,11 L 7,9 L 6,9 L 6,10 L 4,10 L 4,8 L 3,8 L 3,7 L 6,7 L 6,5 L 9,5 Z%22 fill=%22%23ffffff%22/></svg>">
-    <link rel="stylesheet" href="css/themes.css?t=202607161423">
+    <link rel="stylesheet" href="css/themes.css?t=202610161035">
     <link rel="stylesheet" href="css/base.css?t=202607281058">
-    <link rel="stylesheet" href="css/modal.css?t=202607171030">
+    <link rel="stylesheet" href="css/modal.css?t=202610161035">
     <link rel="stylesheet" href="css/menu.css?t=202607171030">
-    <link rel="stylesheet" href="css/weather.css?t=202608061014">
+    <link rel="stylesheet" href="css/weather.css?t=202610161035">
     <link rel="stylesheet" href="css/pet.css?t=202607161423">
     <link rel="stylesheet" href="css/game.css?t=202607161423">
     <link rel="stylesheet" href="css/leaderboard.css?t=202607161423">
-    <link rel="stylesheet" href="css/calendar.css?t=202607171030">
+    <link rel="stylesheet" href="css/calendar.css?t=202610161035">
+    <link rel="stylesheet" href="css/tenure.css?t=202610161035">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 </head>
@@ -103,6 +104,14 @@
             <label class="switch"><input type="checkbox" id="calEnabled" onchange="TWCalendarUI.toggleEnabled()"><span class="slider"></span></label>
         </div>
         <div class="menu-item" id="calRefreshMenu" onclick="TWCalendarUI.refresh()">🔄 重新查詢連假</div>
+
+        <hr style="opacity: 0.1; margin: 5px 0;">
+        <div class="menu-section-title">年資設定</div>
+        <div class="menu-item-switch">
+            <span>年資與特休倒數</span>
+            <label class="switch"><input type="checkbox" id="tenureEnabled" onchange="Tenure.toggleEnabled()"><span class="slider"></span></label>
+        </div>
+        <div class="menu-item" onclick="Tenure.openModal()">🗓️ 設定到職日<span id="tenureDateLabel" style="opacity: 0.55; font-weight: 400;"></span></div>
 
         <hr style="opacity: 0.1; margin: 5px 0;">
         <div class="menu-section-title">天氣設定</div>
@@ -243,6 +252,24 @@
                     <span class="st-cp-label st-cp-to" id="stCpTo">下個</span>
                 </div>
             </div>
+
+            <!-- 到職年資卡（側選單開啟且設定到職日才顯示；點擊切換 年月日 ⇄ 總天數）-->
+            <div class="tenure-card" id="tenureCard" style="display: none;" onclick="Tenure.toggleUnit()" title="點擊切換 年月日／總天數">
+                <div class="tn-head">
+                    <span class="tn-emoji">💼</span>
+                    <div class="tn-text">
+                        <span class="tn-label">你已在此公司</span>
+                        <span class="tn-since" id="tnSince">--</span>
+                        <span class="tn-reset-line"><span class="tn-label">距離特休重置還有</span> <span class="tn-reset" id="tnReset">--</span></span>
+                    </div>
+                </div>
+                <!-- 本特休年度（上次週年日 → 下次週年日）走完比例，樣式沿用節氣卡進度條 -->
+                <div class="st-card-progress">
+                    <span class="st-cp-label" id="tnCpFrom">第 1 年</span>
+                    <div class="st-cp-track"><div class="st-cp-fill" id="tnCpFill"></div></div>
+                    <span class="st-cp-label" id="tnCpTo">0%</span>
+                </div>
+            </div>
         </div>
 
         <!-- 連假倒數橫條（吃豆豆），資料齊全才由 JS 顯示 -->
@@ -270,6 +297,7 @@
                 <div class="cal-tl-legend" id="calTlLegend">
                     <span><i class="lg-h"></i>連假</span>
                     <span id="calTlLegendMakeup"><i class="lg-m"></i>補班</span>
+                    <span id="calTlLegendAnniv" style="display: none;"><i class="lg-a"></i>到職週年</span>
                 </div>
                 <ul id="calList" class="cal-list"></ul>
             </div>
@@ -319,6 +347,26 @@
                 <!-- 整輪 24 節氣（立春起算）：6 個一排共 4 排（一排一季），
                      已過亮起／當前發光／未來灰階，由 JS 佈點 -->
                 <div class="st-timeline" id="stTimeline" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 到職日設定 Modal -->
+    <div id="tenureModal" class="modal-overlay">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>🗓️ 設定到職日</h3>
+                <button class="close-btn" onclick="Tenure.closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="time-input-group">
+                    <label for="tenureDateInput">到職日</label>
+                    <input type="date" id="tenureDateInput">
+                </div>
+                <div class="tn-modal-note">特休依到職週年制計算，每年到職日重置。</div>
+            </div>
+            <div class="modal-footer">
+                <button class="save-btn" onclick="Tenure.saveModal()">儲存設定</button>
             </div>
         </div>
     </div>
@@ -376,12 +424,13 @@
     <script src="js/progress.js?t=202607281058"></script>
     <script src="js/notifications.js?t=202607161423"></script>
     <script src="js/solarterm.js?t=202608061014"></script>
+    <script src="js/tenure.js?t=202610161035"></script>
     <script src="js/weather.js?t=202607241130"></script>
     <script src="js/pet.js?t=202607161423"></script>
-    <script src="js/main.js?t=202607161423"></script>
+    <script src="js/main.js?t=202610161035"></script>
     <script src="game.js?t=202609091054"></script>
     <script src="calendar.js?t=202607151344"></script>
-    <script src="calendar-ui.js?t=202607161430"></script>
+    <script src="calendar-ui.js?t=202610161035"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore-compat.js"></script>

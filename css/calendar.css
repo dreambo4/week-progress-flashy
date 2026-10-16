@@ -132,6 +132,14 @@
     background: #ffb020; /* 固定琥珀色：與吃豆人黃同一套固定強調色，避免和 sunset/lava 主色混淆 */
     transform: translateX(-50%);
 }
+/* 到職週年：線上菱形，顏色用主題的 --anniv-color，與連假區段（主色）區隔 */
+.tl-anniv {
+    position: absolute; top: 45px;
+    width: 8px; height: 8px;
+    background: var(--anniv-color);
+    transform: translateX(-50%) rotate(45deg);
+    box-shadow: 0 0 6px var(--anniv-color);
+}
 .cal-tl-legend {
     display: flex; justify-content: flex-end; gap: 14px;
     font-size: 0.6rem; opacity: 0.65;
@@ -140,6 +148,7 @@
 .cal-tl-legend span { display: inline-flex; align-items: center; gap: 4px; }
 .cal-tl-legend .lg-h { width: 12px; height: 6px; border-radius: 3px; background: var(--primary-color); }
 .cal-tl-legend .lg-m { width: 4px; height: 8px; border-radius: 2px; background: #ffb020; }
+.cal-tl-legend .lg-a { width: 6px; height: 6px; margin: 0 1px; background: var(--anniv-color); transform: rotate(45deg); }
 
 /* ===== 連假清單 / 詢問 Modal ===== */
 .cal-list { list-style: none; padding: 0; margin: 0; }
@@ -154,6 +163,9 @@
     flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums;
     font-size: 0.78rem; color: var(--primary-color); min-width: 56px; text-align: right;
 }
+/* 到職週年列：名稱與倒數改用 --anniv-color，跟連假的主色倒數區隔 */
+.cal-anniv .cal-name { color: var(--anniv-color); font-weight: 700; }
+.cal-anniv .cal-count { color: var(--anniv-color); }
 .cal-empty { opacity: 0.6; padding: 8px 4px; font-size: 0.8rem; }
 .cal-ask-actions { display: flex; gap: 10px; padding: 4px 0 4px; }
 .cal-ask-yes, .cal-ask-no {

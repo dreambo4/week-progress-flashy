@@ -1,0 +1,71 @@
+/* ===== 到職年資卡（年資 + 特休重置倒數 + 本特休年度進度條）===== */
+/* 進度條沿用節氣卡的 .st-card-progress / .st-cp-*（weather.css），三張卡視覺一致 */
+.tenure-card {
+    padding: 1.1rem 1.3rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    border: var(--card-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    animation: fade-in 0.5s ease-out;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.tenure-card:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
+
+/* 三卡並列在中等寬度會擠到換行，年資卡預設獨佔一行變橫條；寬螢幕才與天氣、節氣卡等分 */
+.info-cards > .tenure-card { flex: 1 1 100%; min-width: 0; }
+@media (min-width: 1200px) {
+    .info-cards > .tenure-card { flex: 1 1 0; }
+}
+
+/* 上排：emoji + 三行文字，整組置中、文字靠左 */
+.tn-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+.tn-emoji {
+    font-size: clamp(1.6rem, 6vw, 2rem);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+}
+.tn-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 0;
+    text-align: left;
+}
+.tn-label { font-size: 0.72rem; opacity: 0.6; font-weight: 600; }
+.tn-since {
+    font-size: clamp(1rem, 4.5vw, 1.25rem);
+    font-weight: 800;
+    color: var(--primary-color);
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+/* 「距離特休重置還有」與數值同一行，寬度不夠時數值整段換到下一行 */
+.tn-reset-line { line-height: 1.35; }
+.tn-reset {
+    font-size: 0.85rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+/* 數字大、單位小 */
+.tn-since b, .tn-reset b { font-weight: inherit; }
+.tn-since small, .tn-reset small { font-size: 0.72em; opacity: 0.75; margin: 0 1px; }
+
+/* 到職日設定 Modal 的說明小字 */
+.tn-modal-note { font-size: 0.75rem; opacity: 0.55; margin-top: 10px; line-height: 1.5; }
+
+@media (max-width: 480px) {
+    /* 直排時不需要撐滿整行的 flex-basis */
+    .info-cards > .tenure-card { flex: 0 0 auto; padding: 1rem; }
+}

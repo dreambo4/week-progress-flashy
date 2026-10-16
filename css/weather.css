@@ -132,9 +132,11 @@
 }
 
 
-/* 天氣卡 + 節氣卡並列容器：各佔一半；某張卡隱藏時，另一張自動撐滿整行 */
+/* 天氣卡 + 節氣卡並列容器：各佔一半；某張卡隱藏時，另一張自動撐滿整行。
+   年資卡（tenure.css）在中等寬度會換到下一行，故允許換行 */
 .info-cards {
     display: flex;
+    flex-wrap: wrap;
     gap: 15px;
     margin-top: 1.5rem;
     align-items: stretch;
